@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 
+import * as bcrypt from 'bcrypt'; // Importa el módulo bcrypt
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -23,8 +25,12 @@ export class UsersService {
   } */
   async create(createUserDto: CreateUserDto): Promise<User> {
     try {
+      // Genera un hash de la contraseña antes de almacenarla
+      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
       const newUser = this.userRepository.create({
         ...createUserDto,
+        password: hashedPassword,
         habilitado: createUserDto.habilitado ? 1 : 0,
       });
       return await this.userRepository.save(newUser);
@@ -58,6 +64,17 @@ export class UsersService {
 
     return user;
   }
+  async findOneNameUser(username: string): Promise<User | undefined> {
+    const user = await this.userRepository.findOne({ where: { username } });
+
+    if (!user) {
+      throw new NotFoundException(
+        `Usuario con nombre de usuario ${username} no encontrado`,
+      );
+    }
+
+    return user;
+  }
 
   /*   async update(
     id: number,
@@ -76,11 +93,24 @@ export class UsersService {
     updateUserDto: UpdateUserDto,
   ): Promise<User | undefined> {
     try {
-      const { habilitado, ...rest } = updateUserDto;
+      const { habilitado, password, ...rest } = updateUserDto;
+
+      // Si se proporcionó una nueva contraseña, generamos un hash de la misma
+      let hashedPassword: string | undefined = undefined;
+      if (password) {
+        hashedPassword = await bcrypt.hash(password, 10);
+      }
+
       const updateData: Partial<User> = {
         ...rest,
         habilitado: habilitado ? 1 : 0,
       };
+
+      // Si tenemos una contraseña hasheada, la incluimos en los datos de actualización
+      if (hashedPassword) {
+        updateData.password = hashedPassword;
+      }
+
       await this.userRepository.update(id, updateData);
       return this.findOne(id);
     } catch (error) {
@@ -134,4 +164,6 @@ export class UsersService {
       id,
     };
   } */
+
+  //funciones
 }

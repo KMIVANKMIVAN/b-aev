@@ -74,7 +74,7 @@ export class User {
   @Column({ type: 'text', nullable: true })
   theme: string | null;
 
-  @OneToOne(() => RolesUser)
-  @JoinColumn({ name: 'user_id' }) // La columna que se usará como FK en la tabla RolesUser
-  rolesUser: RolesUser;
+  /* @OneToOne(() => RolesUser, (rolesUser) => rolesUser.user)
+  @JoinColumn()
+  rolesUser: RolesUser; */
 }
