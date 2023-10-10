@@ -18,6 +18,13 @@ import { UsersModule } from '../users/users.module';
   ],
   controllers: [AuthController],
   providers: [AuthService],
+  // para que sea gloval
+  /* providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ], */
   exports: [AuthService],
 })
 export class AuthModule {}

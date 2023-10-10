@@ -120,6 +120,57 @@ export class UsersService {
       );
     }
   }
+  /* async updatePassword(
+    id: number,
+    newPassword: string,
+  ): Promise<User | undefined> {
+    try {
+      // Genera un hash de la nueva contraseña
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Crea un objeto de actualización con la nueva contraseña
+      const updateData: Partial<User> = {
+        password: hashedPassword,
+        prioridad: 1,
+      };
+
+      // Actualiza la contraseña del usuario con ID específico
+      await this.userRepository.update(id, updateData);
+
+      // Devuelve el usuario actualizado (opcional)
+      return this.findOne(id);
+    } catch (error) {
+      // Puedes personalizar la respuesta de error aquí si lo deseas
+      throw new Error(
+        `No se pudo actualizar la contraseña del usuario. Usuario con ID ${id} no encontrado`,
+      );
+    }
+  } */
+  async updatePassword(
+    id: number,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User | undefined> {
+    try {
+      // Genera un hash de la nueva contraseña
+      const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+
+      const updateData: Partial<User> = {
+        prioridad: 1, // Establece la prioridad en 1
+        password: hashedPassword, // Actualiza la contraseña
+      };
+
+      // Actualiza el usuario con ID específico
+      await this.userRepository.update(id, updateData);
+
+      // Devuelve el usuario actualizado (opcional)
+      return this.findOne(id);
+    } catch (error) {
+      // Puedes personalizar la respuesta de error aquí si lo deseas
+      throw new Error(
+        `No se pudo actualizar el usuario. Usuario con ID ${id} no encontrado`,
+      );
+    }
+  }
 
   /* async remove(id: number): Promise<void> {
     await this.userRepository.delete(id);
