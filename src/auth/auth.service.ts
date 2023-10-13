@@ -58,9 +58,24 @@ export class AuthService {
     } */
 
     // Aquí puedes generar un JWT y devolverlo en lugar del objeto de usuario
+    // const payload = { sub: user.id, username: user.username };
+    // return {
+    //   access_token: await this.jwtService.signAsync(payload),
+    // };
     const payload = { sub: user.id, username: user.username };
+    const accessToken = await this.jwtService.signAsync(payload);
+
+    // Omitir la contraseña del objeto de usuario en la respuesta
+    const userResponse = {
+      id: user.id,
+      username: user.username,
+      nivel: user.nivel,
+      // Otras propiedades del usuario que desees incluir
+    };
+
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      access_token: accessToken,
+      user: userResponse, // Datos del usuario sin la contraseña
     };
   }
   /* async signIn(username: string, pass: string): Promise<any> {
