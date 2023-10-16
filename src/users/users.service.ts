@@ -25,15 +25,17 @@ export class UsersService {
   } */
   async create(createUserDto: CreateUserDto): Promise<User> {
     try {
-      // Genera un hash de la contraseña antes de almacenarla
-      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+      if (!this.findOneNameUser(createUserDto.username)) {
+        // Genera un hash de la contraseña antes de almacenarla
+        const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-      const newUser = this.userRepository.create({
-        ...createUserDto,
-        password: hashedPassword,
-        habilitado: createUserDto.habilitado ? 1 : 0,
-      });
-      return await this.userRepository.save(newUser);
+        const newUser = this.userRepository.create({
+          ...createUserDto,
+          password: hashedPassword,
+          habilitado: createUserDto.habilitado ? 1 : 0,
+        });
+        return await this.userRepository.save(newUser);
+      }
     } catch (error) {
       // Puedes personalizar la respuesta de error aquí si lo deseas
       throw new Error('No se pudo crear el usuario.');
