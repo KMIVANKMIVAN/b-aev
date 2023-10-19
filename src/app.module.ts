@@ -16,7 +16,7 @@ import { AuthModule } from './auth/auth.module';
     UsersModule,
     RolesUsersModule,
     AuthModule,
-    TypeOrmModule.forRoot({
+    /* TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
       port: 3306,
@@ -25,8 +25,8 @@ import { AuthModule } from './auth/auth.module';
       database: 'aev',
       entities: [User, RolesUser], // Agrega aquí tus entidades
       synchronize: true, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
-    }),
-    /* TypeOrmModule.forRoot({
+    }), */
+    TypeOrmModule.forRoot({
       type: 'mysql',
       host: '10.10.1.9',
       port: 3306,
@@ -35,7 +35,7 @@ import { AuthModule } from './auth/auth.module';
       database: 'sipago',
       entities: [User, RolesUser], // Agrega aquí tus entidades
       synchronize: true, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
-    }), */
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

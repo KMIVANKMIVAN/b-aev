@@ -24,18 +24,52 @@ export class UsersService {
     return await this.userRepository.save(newUser);
   } */
   async create(createUserDto: CreateUserDto): Promise<User> {
-    try {
-      if (!this.findOneNameUser(createUserDto.username)) {
-        // Genera un hash de la contraseña antes de almacenarla
-        const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    console.log('entro');
 
-        const newUser = this.userRepository.create({
-          ...createUserDto,
-          password: hashedPassword,
-          habilitado: createUserDto.habilitado ? 1 : 0,
-        });
-        return await this.userRepository.save(newUser);
-      }
+    try {
+      // Genera un hash de la contraseña antes de almacenarla
+      console.log(createUserDto.expedido);
+
+      const getTodayDate = () => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}${month}${day}`;
+      };
+
+      const obtenerIniciales = (nombreCompleto) => {
+        const palabras = nombreCompleto.split(' ');
+        let iniciales = '';
+
+        for (const palabra of palabras) {
+          iniciales += palabra[0].toUpperCase();
+        }
+
+        return iniciales;
+      };
+
+      const iniciales = obtenerIniciales(createUserDto.nombre);
+
+      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+      const newUser = this.userRepository.create({
+        ...createUserDto,
+        superior: parseInt(createUserDto.superior.toString()),
+        idOficina: parseInt(createUserDto.idOficina.toString()),
+        dependencia: parseInt(createUserDto.dependencia.toString()),
+        lastLogin: 0,
+        logins: 0,
+        fechaCreacion: parseInt(getTodayDate()),
+        habilitado: parseInt(createUserDto.habilitado.toString()),
+        nivel: parseInt(createUserDto.nivel.toString()),
+        prioridad: 0,
+        idEntidad: parseInt(createUserDto.idEntidad.toString()),
+        super: parseInt(createUserDto.super.toString()),
+        mosca: iniciales,
+        password: hashedPassword,
+      });
+      return await this.userRepository.save(newUser);
     } catch (error) {
       // Puedes personalizar la respuesta de error aquí si lo deseas
       throw new Error('No se pudo crear el usuario.');
@@ -95,6 +129,26 @@ export class UsersService {
     updateUserDto: UpdateUserDto,
   ): Promise<User | undefined> {
     try {
+      const { ...rest } = updateUserDto;
+
+      const updateData: Partial<User> = {
+        ...rest,
+      };
+
+      await this.userRepository.update(id, updateData);
+      return this.findOne(id);
+    } catch (error) {
+      // Puedes personalizar la respuesta de error aquí si lo deseas
+      throw new Error(
+        `No se pudo actualizar el usuario. Usuario con ID ${id} no encontrado`,
+      );
+    }
+  }
+  /* async update(
+    id: number,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User | undefined> {
+    try {
       const { habilitado, password, ...rest } = updateUserDto;
 
       // Si se proporcionó una nueva contraseña, generamos un hash de la misma
@@ -121,7 +175,7 @@ export class UsersService {
         `No se pudo actualizar el usuario. Usuario con ID ${id} no encontrado`,
       );
     }
-  }
+  } */
   /* async updatePassword(
     id: number,
     newPassword: string,
@@ -158,6 +212,31 @@ export class UsersService {
 
       const updateData: Partial<User> = {
         prioridad: 1, // Establece la prioridad en 1
+        password: hashedPassword, // Actualiza la contraseña
+      };
+
+      // Actualiza el usuario con ID específico
+      await this.userRepository.update(id, updateData);
+
+      // Devuelve el usuario actualizado (opcional)
+      return this.findOne(id);
+    } catch (error) {
+      // Puedes personalizar la respuesta de error aquí si lo deseas
+      throw new Error(
+        `No se pudo actualizar el usuario. Usuario con ID ${id} no encontrado`,
+      );
+    }
+  }
+  async resetPassword(
+    id: number,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User | undefined> {
+    try {
+      // Genera un hash de la nueva contraseña
+      const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+
+      const updateData: Partial<User> = {
+        prioridad: 0, // Establece la prioridad en 1
         password: hashedPassword, // Actualiza la contraseña
       };
 

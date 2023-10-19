@@ -53,8 +53,11 @@ export class CreateUserDto {
   @IsOptional()
   fechaCreacion?: number;
 
-  @IsBoolean()
-  habilitado: boolean;
+  // @IsBoolean()
+  // habilitado: boolean;
+
+  @IsInt()
+  habilitado: number;
 
   @IsInt()
   nivel: number;

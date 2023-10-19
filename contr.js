@@ -118,29 +118,29 @@ function getUserInput() {
 }
 
 getUserInput(); */
-const readline = require('readline');
-const crypto = require('crypto');
+/* function getTodayDate() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}${month}${day}`;
+}
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+// Ejemplo de uso
+const todayDate = getTodayDate();
+console.log(todayDate); // 20231017 */
+function obtenerIniciales(nombreCompleto) {
+  const palabras = nombreCompleto.split(' '); // Dividir el nombre en palabras
+  let iniciales = '';
 
-rl.question(
-  'Ingresa la cadena para generar el hash SHA-256: ',
-  (inputString) => {
-    // Crear un objeto hash
-    const hash = crypto.createHash('sha256');
+  // Recorrer cada palabra y obtener la inicial en mayúsculas
+  for (const palabra of palabras) {
+    iniciales += palabra[0].toUpperCase();
+  }
 
-    // Actualizar el objeto hash con la cadena de entrada
-    hash.update(inputString);
+  return iniciales;
+}
 
-    // Generar el hash en formato hexadecimal
-    const hashedString = hash.digest('hex');
-
-    console.log('Cadena de entrada:', inputString);
-    console.log('Hash SHA-256:', hashedString);
-
-    rl.close();
-  },
-);
+const nombreCompleto = 'i';
+const iniciales = obtenerIniciales(nombreCompleto);
+console.log(iniciales); // Debería imprimir 'IACC'

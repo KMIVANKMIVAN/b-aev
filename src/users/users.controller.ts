@@ -17,7 +17,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
@@ -56,6 +56,11 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.usersService.updatePassword(+id, updateUserDto);
+  }
+  @UseGuards(AuthGuard)
+  @Patch('resetpassword/:id')
+  resetPassword(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.resetPassword(+id, updateUserDto);
   }
 
   @UseGuards(AuthGuard)
