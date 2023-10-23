@@ -129,7 +129,7 @@ getUserInput(); */
 // Ejemplo de uso
 const todayDate = getTodayDate();
 console.log(todayDate); // 20231017 */
-function obtenerIniciales(nombreCompleto) {
+/* function obtenerIniciales(nombreCompleto) {
   const palabras = nombreCompleto.split(' '); // Dividir el nombre en palabras
   let iniciales = '';
 
@@ -143,4 +143,40 @@ function obtenerIniciales(nombreCompleto) {
 
 const nombreCompleto = 'i';
 const iniciales = obtenerIniciales(nombreCompleto);
-console.log(iniciales); // Debería imprimir 'IACC'
+console.log(iniciales); // Debería imprimir 'IACC' */
+
+/* const crypto = require('crypto');
+
+// Datos que deseas encriptar
+const data = '708090';
+
+// Crear un objeto hash con el algoritmo SHA-256
+const sha256Hash = crypto.createHash('sha256');
+
+// Actualizar el hash con los datos que deseas encriptar
+sha256Hash.update(data);
+
+// Calcular el hash en formato hexadecimal
+const hashedData = sha256Hash.digest('hex');
+
+console.log('Texto original:', data);
+console.log('Texto encriptado (SHA-256):', hashedData); */
+const crypto = require('crypto');
+
+// Datos que deseas encriptar
+const data = '708090';
+const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30'; // Tu clave secreta
+
+// Crear un objeto hash con el algoritmo SHA-256
+const sha256Hash = crypto.createHmac('sha256', secretKey);
+
+// Actualizar el hash con los datos que deseas encriptar
+sha256Hash.update(data);
+
+// Calcular el hash en formato hexadecimal
+const hashedData = sha256Hash.digest('hex');
+
+console.log('Texto original:', data);
+console.log('Clave secreta:', secretKey);
+console.log('Texto encriptado (SHA-256):', hashedData);
+

@@ -50,12 +50,13 @@ export class UsersController {
     return this.usersService.update(+id, updateUserDto);
   }
   @UseGuards(AuthGuard)
-  @Patch('updatepassword/:id')
+  @Patch('updatepassword/:id/:antiguop')
   updatePassword(
     @Param('id') id: string,
+    @Param('antiguop') antiguop: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.usersService.updatePassword(+id, updateUserDto);
+    return this.usersService.updatePassword(+id, antiguop, updateUserDto);
   }
   @UseGuards(AuthGuard)
   @Patch('resetpassword/:id')

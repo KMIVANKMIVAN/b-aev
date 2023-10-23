@@ -9,6 +9,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 
+import * as crypto from 'crypto';
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -27,7 +29,6 @@ export class UsersService {
     console.log('entro');
 
     try {
-      // Genera un hash de la contraseña antes de almacenarla
       console.log(createUserDto.expedido);
 
       const getTodayDate = () => {
@@ -51,27 +52,41 @@ export class UsersService {
 
       const iniciales = obtenerIniciales(createUserDto.nombre);
 
-      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+      const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30'; // Tu clave secreta
+
+      // Crear un objeto hash con el algoritmo SHA-256
+      const sha256Hash = crypto.createHmac('sha256', secretKey);
+
+      // Actualizar el hash con los datos que deseas encriptar
+      sha256Hash.update(createUserDto.password);
+
+      // Calcular el hash en formato hexadecimal
+      const hashedData = sha256Hash.digest('hex');
+
+      console.log('Texto original:', createUserDto.password);
+      console.log('Clave secreta:', secretKey);
+      console.log('Texto encriptado (SHA-256):', hashedData);
+
+      console.log('1111 ' + hashedData);
 
       const newUser = this.userRepository.create({
         ...createUserDto,
-        superior: parseInt(createUserDto.superior.toString()),
-        idOficina: parseInt(createUserDto.idOficina.toString()),
-        dependencia: parseInt(createUserDto.dependencia.toString()),
+        superior: createUserDto.superior,
+        idOficina: createUserDto.idOficina,
+        dependencia: createUserDto.dependencia,
         lastLogin: 0,
         logins: 0,
         fechaCreacion: parseInt(getTodayDate()),
-        habilitado: parseInt(createUserDto.habilitado.toString()),
-        nivel: parseInt(createUserDto.nivel.toString()),
+        habilitado: createUserDto.habilitado,
+        nivel: createUserDto.nivel,
         prioridad: 0,
-        idEntidad: parseInt(createUserDto.idEntidad.toString()),
-        super: parseInt(createUserDto.super.toString()),
+        idEntidad: createUserDto.idEntidad,
+        super: createUserDto.super,
         mosca: iniciales,
-        password: hashedPassword,
+        password: hashedData,
       });
       return await this.userRepository.save(newUser);
     } catch (error) {
-      // Puedes personalizar la respuesta de error aquí si lo deseas
       throw new Error('No se pudo crear el usuario.');
     }
   }
@@ -204,27 +219,52 @@ export class UsersService {
   } */
   async updatePassword(
     id: number,
+    antiguop: string,
     updateUserDto: UpdateUserDto,
   ): Promise<User | undefined> {
     try {
-      // Genera un hash de la nueva contraseña
-      const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+      console.log('111 id ' + id);
+      console.log('222 antiguop ' + antiguop);
+      console.log('333 updateUserDto.password ' + updateUserDto.password);
 
-      const updateData: Partial<User> = {
-        prioridad: 1, // Establece la prioridad en 1
-        password: hashedPassword, // Actualiza la contraseña
-      };
+      const user = await this.findOne(id);
+      const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30'; // Tu clave secreta
 
-      // Actualiza el usuario con ID específico
-      await this.userRepository.update(id, updateData);
+      // Crear un objeto hash con el algoritmo SHA-256
+      const sha256Hash = crypto.createHmac('sha256', secretKey);
 
-      // Devuelve el usuario actualizado (opcional)
-      return this.findOne(id);
+      // Actualizar el hash con los datos que deseas encriptar
+      sha256Hash.update(antiguop);
+
+      // Calcular el hash en formato hexadecimal
+      const anti = sha256Hash.digest('hex');
+
+      if (anti === user.password) {
+        console.log('si es la antigua');
+        const sha256HashNew = crypto.createHmac('sha256', secretKey);
+
+        // Actualizar el hash con los datos que deseas encriptar
+        sha256HashNew.update(updateUserDto.password);
+        const newPassword = sha256HashNew.digest('hex');
+
+        const updateData: Partial<User> = {
+          prioridad: 1, // Establece la prioridad en 1
+          password: newPassword, // Actualiza la contraseña
+        };
+
+        // Actualiza el usuario con ID específico
+        await this.userRepository.update(id, updateData);
+
+        // Devuelve el usuario actualizado (opcional)
+        return this.findOne(id);
+      } else {
+        throw new Error(
+          `No se pudo actualizar el usuario. Usuario con ID ${id} su contrasena anterior no coincide`,
+        );
+      }
     } catch (error) {
       // Puedes personalizar la respuesta de error aquí si lo deseas
-      throw new Error(
-        `No se pudo actualizar el usuario. Usuario con ID ${id} no encontrado`,
-      );
+      throw error;
     }
   }
   async resetPassword(
@@ -233,11 +273,26 @@ export class UsersService {
   ): Promise<User | undefined> {
     try {
       // Genera un hash de la nueva contraseña
-      const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+      const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30'; // Tu clave secreta
+
+      // Crear un objeto hash con el algoritmo SHA-256
+      const sha256Hash = crypto.createHmac('sha256', secretKey);
+
+      // Actualizar el hash con los datos que deseas encriptar
+      sha256Hash.update(updateUserDto.password);
+
+      // Calcular el hash en formato hexadecimal
+      const hashedData = sha256Hash.digest('hex');
+
+      console.log('Texto original:', updateUserDto.password);
+      console.log('Clave secreta:', secretKey);
+      console.log('Texto encriptado (SHA-256):', hashedData);
+
+      console.log('1111 ' + hashedData);
 
       const updateData: Partial<User> = {
         prioridad: 0, // Establece la prioridad en 1
-        password: hashedPassword, // Actualiza la contraseña
+        password: hashedData, // Actualiza la contraseña
       };
 
       // Actualiza el usuario con ID específico
