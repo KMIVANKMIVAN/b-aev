@@ -1,11 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToOne,
-  JoinColumn,
-} from 'typeorm';
-import { RolesUser } from '../../roles_users/entities/roles_user.entity';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity('users') // Nombre de la tabla en la base de datos
 export class User {
   @PrimaryGeneratedColumn()

@@ -3,19 +3,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 
-import * as bcrypt from 'bcrypt'; // Importa el módulo bcrypt
-
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 
 import * as crypto from 'crypto';
 
+import { RolesUsersService } from '../roles_users/roles_users.service';
+
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly rolesUsersService: RolesUsersService, // Inyecta el servicio de roles_users
   ) {}
 
   /* async create(createUserDto: CreateUserDto): Promise<User> {
@@ -26,8 +27,6 @@ export class UsersService {
     return await this.userRepository.save(newUser);
   } */
   async create(createUserDto: CreateUserDto): Promise<User> {
-    console.log('entro');
-
     try {
       console.log(createUserDto.expedido);
 
@@ -63,12 +62,6 @@ export class UsersService {
       // Calcular el hash en formato hexadecimal
       const hashedData = sha256Hash.digest('hex');
 
-      console.log('Texto original:', createUserDto.password);
-      console.log('Clave secreta:', secretKey);
-      console.log('Texto encriptado (SHA-256):', hashedData);
-
-      console.log('1111 ' + hashedData);
-
       const newUser = this.userRepository.create({
         ...createUserDto,
         superior: createUserDto.superior,
@@ -85,6 +78,20 @@ export class UsersService {
         mosca: iniciales,
         password: hashedData,
       });
+
+      // Guardar el nuevo usuario en la base de datos
+      const savedUser = await this.userRepository.save(newUser);
+
+      // Llama al servicio de roles_users para crear un nuevo registro
+      // Pasando el user_id del usuario recién creado y el role_id adecuado
+      const createRolesUserDto = {
+        user_id: savedUser.id,
+        role_id: 1, // Reemplaza 1 por el role_id correcto
+      };
+      await this.rolesUsersService.create(createRolesUserDto);
+
+      return savedUser;
+
       return await this.userRepository.save(newUser);
     } catch (error) {
       throw new Error('No se pudo crear el usuario.');
