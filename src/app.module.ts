@@ -21,6 +21,7 @@ import { Datoscontrato } from './datoscontrato/entities/datoscontrato.entity';
 import { Planillasporcontrato } from './planillasporcontrato/entities/planillasporcontrato.entity';
 import { Planillasigepro } from './planillasigepro/entities/planillasigepro.entity';
 import { Planillascierresaldo } from './planillascierresaldo/entities/planillascierresaldo.entity';
+import { DocumentpdfModule } from './documentpdf/documentpdf.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { Planillascierresaldo } from './planillascierresaldo/entities/planillasc
       ], // Agrega aquí tus entidades
       synchronize: true, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
     }),
+    DocumentpdfModule,
   ],
   controllers: [AppController],
   providers: [AppService],
