@@ -7,9 +7,13 @@ import { JwtModule } from '@nestjs/jwt';
 
 import { UsersModule } from '../users/users.module';
 
+// import { HttpService } from '@nestjs/axios';
+import { HttpModule } from '@nestjs/axios';
+
 @Module({
   imports: [
     UsersModule,
+    HttpModule,
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,

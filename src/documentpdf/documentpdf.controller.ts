@@ -3,21 +3,20 @@ import {
   Post,
   UploadedFile,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express/multer';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentpdfService } from './documentpdf.service';
-import { CreateDocumentpdfDto } from './dto/create-documentpdf.dto';
-import { UpdateDocumentpdfDto } from './dto/update-documentpdf.dto';
-import { Response } from 'express';
+import { Express } from 'express';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('documentpdf')
 export class DocumentpdfController {
   constructor(private readonly documentpdfService: DocumentpdfService) {}
-
+  @UseGuards(AuthGuard)
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    // Pass the uploaded file to the service
-    await this.documentpdfService.processUploadedFile(file);
+    return this.documentpdfService.guardarPdf(file);
   }
 }

@@ -230,10 +230,6 @@ export class UsersService {
     updateUserDto: UpdateUserDto,
   ): Promise<User | undefined> {
     try {
-      console.log('111 id ' + id);
-      console.log('222 antiguop ' + antiguop);
-      console.log('333 updateUserDto.password ' + updateUserDto.password);
-
       const user = await this.findOne(id);
       const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30'; // Tu clave secreta
 
@@ -290,12 +286,6 @@ export class UsersService {
 
       // Calcular el hash en formato hexadecimal
       const hashedData = sha256Hash.digest('hex');
-
-      console.log('Texto original:', updateUserDto.password);
-      console.log('Clave secreta:', secretKey);
-      console.log('Texto encriptado (SHA-256):', hashedData);
-
-      console.log('1111 ' + hashedData);
 
       const updateData: Partial<User> = {
         prioridad: 0, // Establece la prioridad en 1

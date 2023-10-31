@@ -1,36 +1,52 @@
-import { Injectable } from '@nestjs/common';  
-import { createReadStream, createWriteStream } from 'fs';
-import { join } from 'path';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import * as fs from 'fs';
 
 @Injectable()
 export class DocumentpdfService {
-  private readonly pdfsDirectory = '/home/vancc369/Documentos';
+  async guardarPdf(file: Express.Multer.File) {
+    if (file) {
+      if (file.mimetype !== 'application/pdf') {
+        throw new BadRequestException('El archivo no es un PDF válido');
+      }
 
-  async processUploadedFile(file: Express.Multer.File): Promise<void> {
-    try {
-      // Define the destination file path
-      const destinationPath = join(this.pdfsDirectory, file.originalname);
+      if (file.size > 10 * 1024 * 1024) {
+        // 10MB en bytes
+        throw new BadRequestException(
+          'El archivo excede el tamaño máximo de 10MB',
+        );
+      }
 
-      // Create a readable stream from the uploaded file
-      const readStream = createReadStream(file.path);
+      const dateTime = this.obtenerFechaYHoraActual();
+      const uniqueName = await this.concatenarNombreConFechaHora(dateTime);
+      const destinationPath = '/home/vancc369/Documentos/' + uniqueName;
 
-      // Create or overwrite the file in the specified directory
-      const writeStream = createWriteStream(destinationPath);
-
-      // Pipe the data from the read stream to the write stream
-      readStream.pipe(writeStream);
-
-      // Close the streams to release resources
-      readStream.close();
-      writeStream.close();
-
-      // Optionally, you can save the file path in a database or return some response
-
-      // You may also want to handle errors, perform validation, and return appropriate responses.
-    } catch (error) {
-      // Handle errors, such as file write errors or validation errors
-      // You can throw exceptions or return appropriate responses as needed.
-      throw error;
+      try {
+        fs.writeFileSync(destinationPath, file.buffer);
+        console.log(`PDF guardado en: ${destinationPath}`);
+        return { success: true, message: 'PDF guardado exitosamente' };
+      } catch (error) {
+        console.error('Error al guardar el PDF:', error);
+        return { success: false, message: 'Error al guardar el PDF' };
+      }
+    } else {
+      console.log('No se recibió ningún archivo.');
+      return { success: false, message: 'No se recibió ningún archivo' };
     }
+  }
+
+  obtenerFechaYHoraActual(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const seconds = now.getSeconds();
+
+    return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`;
+  }
+
+  async concatenarNombreConFechaHora(dateTime: string) {
+    return `haciendopruebas-${dateTime}.pdf`;
   }
 }
