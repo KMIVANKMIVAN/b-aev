@@ -43,6 +43,23 @@ export class DatoscontratoController {
   findOneContCod(@Param('contcod') contcod: string) {
     return this.datoscontratoService.findOneContCod(contcod);
   }
+  @UseGuards(AuthGuard)
+  @Get('/compleja/:contcod?:valortitrcod?[valor_ploccod1,valor_ploccod2]')
+  findOneContCodCompleja(@Param('contcod') contcod: string) {
+    const titrcod = 'valortitrcod'; // Reemplaza 'valor_titrcod' con el valor adecuado
+    const ploccod = ['valor_ploccod1', 'valor_ploccod2']; // Reemplaza con los valores adecuados
+    return this.datoscontratoService.findOneContCodCompleja(
+      contcod,
+      titrcod,
+      ploccod,
+    );
+  }
+
+  /* @UseGuards(AuthGuard)
+  @Get('/compleja/:contcod')
+  findOneContCodCompleja(@Param('contcod') contcod: string) {
+    return this.datoscontratoService.findOneContCodCompleja(contcod);
+  } */
 
   /* @Patch(':id')
   update(

@@ -11,25 +11,77 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    private readonly httpService: HttpService,
+    private httpService: HttpService,
   ) {}
 
   async signIn(username: string, password: string): Promise<any> {
-    /* const url = 'https://sitahu.aevivienda.gob.bo/ServicioWeb/verify/4760619';
+    /* const url = 'https://sitahu.aevivienda.gob.bo/ServicioWeb/vigente/4760619';
     const authorizationToken =
-      'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZF9rZXkiOjEsImluc3RpdHV0aW9uIjoiQWdlbmNpYS';
-    const headers = {
-      Authorization: `Bearer ${authorizationToken}`,
-    };
-    // Define los datos que deseas enviar en la solicitud POST, por ejemplo:
-    const requestData = {
-      // Agrega los datos que necesitas enviar aquí
-    };
-    const response = await this.httpService.axiosRef.post(url, requestData, {
-      headers,
+      'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZF9kZXZpY2VpbmciOjEsImluc3RpdHV0aW9uIjoiQWdlbmNpYSBFc3RhdGFsIGRlIFZpdmllbmRhIiwic3lzdGVtIjoiVmlcdTAwZTF0aWNvcyIsImRhdGFjcmVhdGVkIjoxNjY4MTg1OTI2LCJkYXRlZmluaXNoZWQiOjAsIkFQSV9USU1FIjoxNjY4MTg1OTI2fQ.iMvwfyzUolxC_fpRjY606ZHNkWU0WlX4jyykCgv-Xus';
+ */
+    /* const response = this.httpService.get(url, {
+      headers: {
+        Authorization: authorizationToken,
+      },
+    }); */
+    /* const response = this.httpService.get(url, {
+      headers: {
+        Authorization: authorizationToken,
+      },
     });
-    console.log('2222');
-    console.log(response.data); */
+    console.log('222 ', response); */
+
+    console.log(
+      this.httpService.get('https://pokeapi.co/api/v2/pokemon/ditto'),
+    );
+
+    /* const config = {
+      headers: {
+        Authorization: authorizationToken,
+      },
+    };
+
+    const response = await axios.get(url, config);
+    // return response.data; */
+
+    /* const response = await this.httpService
+      .get(url, {
+        headers: {
+          Authorization: authorizationToken,
+        },
+      })
+      .toPromise(); */
+
+    // console.log(response.data);
+
+    /* try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Authorization: authorizationToken,
+        },
+      });
+
+      if (response.status !== 200) {
+        throw new Error('Error al realizar la solicitud');
+      }
+
+      // Procesar la respuesta si es necesario
+      const data = await response.json();
+      console.log(data);
+      if (!response.ok) {
+        throw new Error(
+          `Error en la solicitud HTTP: ${response.status} - ${response.statusText}`,
+        );
+        
+        // Resto del código para procesar la respuesta...
+      } catch (error) {
+      console.error('Error al realizar la solicitud HTTP:', error);
+      return {
+        message: 'Error en la solicitud HTTP',
+      };
+    }
+  } */
     // Buscar al usuario por nombre de usuario
     const user = await this.usersService.findOneNameUser(username);
     const carnet = user.cedulaIdentidad;

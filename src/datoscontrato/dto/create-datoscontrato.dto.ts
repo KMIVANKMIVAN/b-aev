@@ -1,8 +1,15 @@
 // export class CreateDatoscontratoDto {}
-import { IsOptional, IsInt, IsString, IsDate, IsNumber } from 'class-validator';
+import {
+  IsOptional,
+  IsInt,
+  IsString,
+  IsDate,
+  IsNumber,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class CreateDatoscontratoDto {
-  @IsOptional()
+  @IsNotEmpty()
   @IsInt()
   id: number;
 

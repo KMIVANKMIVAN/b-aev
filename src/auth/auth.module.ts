@@ -12,8 +12,8 @@ import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
-    UsersModule,
     HttpModule,
+    UsersModule,
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,

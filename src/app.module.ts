@@ -4,6 +4,23 @@ import { AppService } from './app.service';
 
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { User } from './users/entities/user.entity';
+import { RolesUser } from './roles_users/entities/roles_user.entity';
+import { Contratosigepro } from './contratosigepro/entities/contratosigepro.entity';
+import { Datoscontrato } from './datoscontrato/entities/datoscontrato.entity';
+import { Planillasporcontrato } from './planillasporcontrato/entities/planillasporcontrato.entity';
+import { Planillasigepro } from './planillasigepro/entities/planillasigepro.entity';
+import { Planillascierresaldo } from './planillascierresaldo/entities/planillascierresaldo.entity';
+import { Documentpdf } from './documentpdf/entities/documentpdf.entity';
+import { Desembolso } from './desembolsos/entities/desembolso.entity';
+import { Etapa } from './etapas/entities/etapa.entity';
+import { Titularcuenta } from './titularcuenta/entities/titularcuenta.entity';
+import { Devolucione } from './devoluciones/entities/devolucione.entity';
+// import {  } from './';
+
+// import { HttpModule } from '@nestjs/axios';
+
+// import { MulterModule } from '@nestjs/platform-express';
 import { UsersModule } from './users/users.module';
 import { RolesUsersModule } from './roles_users/roles_users.module';
 import { AuthModule } from './auth/auth.module';
@@ -13,19 +30,10 @@ import { PlanillasporcontratoModule } from './planillasporcontrato/planillasporc
 import { PlanillascierresaldoModule } from './planillascierresaldo/planillascierresaldo.module';
 import { PlanillasigeproModule } from './planillasigepro/planillasigepro.module';
 import { DocumentpdfModule } from './documentpdf/documentpdf.module';
-
-import { User } from './users/entities/user.entity';
-import { RolesUser } from './roles_users/entities/roles_user.entity';
-import { Contratosigepro } from './contratosigepro/entities/contratosigepro.entity';
-import { Datoscontrato } from './datoscontrato/entities/datoscontrato.entity';
-import { Planillasporcontrato } from './planillasporcontrato/entities/planillasporcontrato.entity';
-import { Planillasigepro } from './planillasigepro/entities/planillasigepro.entity';
-import { Planillascierresaldo } from './planillascierresaldo/entities/planillascierresaldo.entity';
-import { Documentpdf } from './documentpdf/entities/documentpdf.entity';
-
-// import { HttpModule } from '@nestjs/axios';
-
-// import { MulterModule } from '@nestjs/platform-express';
+import { DesembolsosModule } from './desembolsos/desembolsos.module';
+import { EtapasModule } from './etapas/etapas.module';
+import { TitularcuentaModule } from './titularcuenta/titularcuenta.module';
+import { DevolucionesModule } from './devoluciones/devoluciones.module';
 
 @Module({
   imports: [
@@ -37,6 +45,11 @@ import { Documentpdf } from './documentpdf/entities/documentpdf.entity';
     PlanillasigeproModule,
     PlanillascierresaldoModule,
     DocumentpdfModule,
+    DesembolsosModule,
+    DesembolsosModule,
+    EtapasModule,
+    TitularcuentaModule,
+    DevolucionesModule,
     AuthModule,
     // HttpModule,
 
@@ -69,6 +82,10 @@ import { Documentpdf } from './documentpdf/entities/documentpdf.entity';
         Planillasigepro,
         Planillascierresaldo,
         Documentpdf,
+        Desembolso,
+        Etapa,
+        Titularcuenta,
+        Devolucione,
       ], // Agrega aquí tus entidades
       synchronize: true, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
     }),
