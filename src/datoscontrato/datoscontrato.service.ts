@@ -133,29 +133,7 @@ export class DatoscontratoService {
       throw new Error('No se pudieron obtener los Datoscontrato.');
     }
   }
-  /* async findOneContCodCompleja(contcod: string): Promise<Datoscontrato[]> {
-    try {
-      const sql = `
-        SELECT d.id AS iddesem,
-        d.etapa AS etapa,
-        d.*,
-        DATE_FORMAT(d.fecha_generado, '%d/%m/%Y') AS fechagenerado,
-        DATE_FORMAT(d.fecha_banco, '%d/%m/%Y') AS fechabanco,
-        d.monto_desembolsado
-        FROM desembolsos d
-        INNER JOIN etapas e ON d.estado = e.id
-        WHERE d.estado = 6
-        AND d.cont_cod = ?
-        AND d.titr_cod = 'CT_PL'
-        AND (d.ploc_cod IN ('1', '2'))
-      `;
 
-      const result = await this.connection.query(sql, [contcod]);
-      return result;
-    } catch (error) {
-      throw new Error('No se pudieron obtener los Datoscontrato.');
-    }
-  } */
   async findOneContCodCompleja(
     contcod: string,
     titrcod: string,
@@ -189,6 +167,212 @@ export class DatoscontratoService {
       throw new Error('No se pudieron obtener los Datoscontrato.');
     }
   }
+
+  /* async findOneCodigo(codigo: string): Promise<Datoscontrato[]> {
+    try {
+      const sql = `
+        SELECT * FROM datoscontrato
+        WHERE proy_cod = ?
+        UNION
+        SELECT * FROM contratosigepro
+        WHERE proy_cod = ?
+      `;
+
+      const result = await this.connection.query(sql, [codigo, codigo]);
+      return result;
+    } catch (error) {
+      throw new Error('No se pudieron obtener los Datoscontrato.');
+    }
+  } */
+
+  async findOneCodigo(codigo: string): Promise<Datoscontrato[]> {
+    try {
+      const sql = `
+        SELECT * FROM (
+          SELECT * FROM datoscontrato
+          WHERE proy_cod LIKE ?
+          UNION
+          SELECT * FROM contratosigepro
+          WHERE proy_cod LIKE ?
+        ) AS combined_data
+        ORDER BY RAND()
+        LIMIT 10
+      `;
+
+      const result = await this.connection.query(sql, [
+        `%${codigo}%`,
+        `%${codigo}%`,
+      ]);
+      return result;
+    } catch (error) {
+      throw new Error('No se pudieron obtener los Datoscontrato.');
+    }
+  }
+
+  /* async findOneCodigo(codigo: string): Promise<Datoscontrato[]> {
+    try {
+      const sql = `
+        SELECT * FROM datoscontrato
+        WHERE proy_cod LIKE ?
+        UNION
+        SELECT * FROM contratosigepro
+        WHERE proy_cod LIKE ?
+        LIMIT 10
+      `;
+
+      const result = await this.connection.query(sql, [
+        `%${codigo}%`,
+        `%${codigo}%`,
+      ]);
+      return result;
+    } catch (error) {
+      throw new Error('No se pudieron obtener los Datoscontrato.');
+    }
+  } */
+
+  async findOneNomProy(nomproy: string): Promise<Datoscontrato[]> {
+    try {
+      const sql = `
+        SELECT * FROM (
+          SELECT * FROM datoscontrato
+          WHERE cont_des LIKE ?
+          UNION
+          SELECT * FROM contratosigepro
+          WHERE cont_des LIKE ?
+        ) AS combined_data
+        ORDER BY RAND()
+        LIMIT 10
+      `;
+
+      const result = await this.connection.query(sql, [
+        `%${nomproy}%`,
+        `%${nomproy}%`,
+      ]);
+
+      return result;
+    } catch (error) {
+      throw new Error('No se pudieron obtener los Datoscontrato.');
+    }
+  }
+
+  async findOneDepart(depdes: string): Promise<Datoscontrato[]> {
+    try {
+      const sql = `
+        SELECT * FROM (
+          SELECT * FROM datoscontrato
+          WHERE depa_des LIKE ?
+          UNION
+          SELECT * FROM contratosigepro
+          WHERE depa_des LIKE ?
+        ) AS combined_data
+        ORDER BY RAND()
+        LIMIT 10
+      `;
+
+      const result = await this.connection.query(sql, [
+        `%${depdes}%`,
+        `%${depdes}%`,
+      ]);
+
+      return result;
+    } catch (error) {
+      throw new Error('No se pudieron obtener los Datoscontrato.');
+    }
+  }
+
+  async filtrarViviendaNueva(
+    codigo: string,
+    nomproy: string,
+    depdes: string,
+  ): Promise<Datoscontrato[]> {
+    try {
+      const conditions = [];
+      const values = [];
+
+      if (codigo) {
+        conditions.push('proy_cod LIKE ?');
+        values.push(`%${codigo}%`);
+      }
+
+      if (nomproy) {
+        conditions.push('cont_des LIKE ?');
+        values.push(`%${nomproy}%`);
+      }
+
+      if (depdes) {
+        conditions.push('depa_des LIKE ?');
+        values.push(`%${depdes}%`);
+      }
+
+      const whereClause =
+        conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      const sql = `
+        (SELECT * FROM datoscontrato
+        ${whereClause}
+        ORDER BY RAND()
+        LIMIT 10)
+        UNION
+        (SELECT * FROM contratosigepro
+        ${whereClause}
+        ORDER BY RAND()
+        LIMIT 10)
+      `;
+
+      const result = await this.connection.query(sql, values.concat(values));
+
+      return result;
+    } catch (error) {
+      throw new Error('No se pudieron obtener los Datoscontrato.');
+    }
+  }
+
+  /* async filtrarViviendaNueva(
+    codigo: string,
+    nomproy: string,
+    depdes: string,
+  ): Promise<Datoscontrato[]> {
+    try {
+      const conditions = [];
+      const values = [];
+
+      if (codigo) {
+        conditions.push('proy_cod LIKE ?');
+        values.push(`%${codigo}%`);
+      }
+
+      if (nomproy) {
+        conditions.push('cont_des LIKE ?');
+        values.push(`%${nomproy}%`);
+      }
+
+      if (depdes) {
+        conditions.push('depa_des LIKE ?');
+        values.push(`%${depdes}%`);
+      }
+
+      const whereClause =
+        conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      const sql = `
+        (SELECT * FROM datoscontrato
+        ${whereClause}
+        ORDER BY RAND()
+        LIMIT 10)
+        UNION
+        (SELECT * FROM contratosigepro
+        ${whereClause}
+        ORDER BY RAND()
+        LIMIT 10)
+      `;
+
+      const result = await this.connection.query(sql, values.concat(values));
+
+      return result;
+    } catch (error) {
+      throw new Error('No se pudieron obtener los Datoscontrato.');
+    }
+  } */
 
   /* async findOneContCodCompleja(contcod: string): Promise<Datoscontrato[]> {
     try {

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { DatoscontratoService } from './datoscontrato.service';
 import { CreateDatoscontratoDto } from './dto/create-datoscontrato.dto';
@@ -44,16 +45,63 @@ export class DatoscontratoController {
     return this.datoscontratoService.findOneContCod(contcod);
   }
   @UseGuards(AuthGuard)
-  @Get('/compleja/:contcod?:valortitrcod?[valor_ploccod1,valor_ploccod2]')
-  findOneContCodCompleja(@Param('contcod') contcod: string) {
-    const titrcod = 'valortitrcod'; // Reemplaza 'valor_titrcod' con el valor adecuado
-    const ploccod = ['valor_ploccod1', 'valor_ploccod2']; // Reemplaza con los valores adecuados
+  @Get('/compleja/:contcod/:valortitrcod')
+  findOneContCodCompleja(
+    @Param('contcod') contcod: string,
+    @Param('valortitrcod') valortitrcod: string,
+    @Query('ploccod') ploccod: string[],
+  ) {
+    // ploccod es un array de valores que se pasan como una consulta (ejemplo: ?ploccod=valor1&ploccod=valor2)
     return this.datoscontratoService.findOneContCodCompleja(
       contcod,
-      titrcod,
+      valortitrcod,
       ploccod,
     );
   }
+
+  @UseGuards(AuthGuard)
+  @Get('/codigo/:codigo')
+  findOneCodigo(@Param('codigo') codigo: string) {
+    return this.datoscontratoService.findOneCodigo(codigo);
+  }
+  @UseGuards(AuthGuard)
+  @Get('/nomproy/:nomproy')
+  findOneNomProy(@Param('nomproy') nomproy: string) {
+    return this.datoscontratoService.findOneNomProy(nomproy);
+  }
+  @UseGuards(AuthGuard)
+  @Get('/depdes/:depdes')
+  findOneDepart(@Param('depdes') depdes: string) {
+    return this.datoscontratoService.findOneDepart(depdes);
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('/filtrar/:codigo?/:nomproy?/:depdes?')
+  filtrarViviendaNueva(
+    @Param('codigo') codigo: string,
+    @Param('nomproy') nomproy: string,
+    @Param('depdes') depdes: string,
+  ) {
+    return this.datoscontratoService.filtrarViviendaNueva(
+      codigo,
+      nomproy,
+      depdes,
+    ); // Pasar los parámetros a la función
+  }
+
+  /* @UseGuards(AuthGuard)
+  @Get('/filtrar/:codigo/:nomproy/:depdes')
+  filtrarViviendaNueva(
+    @Param('codigo') codigo: string,
+    @Param('nomproy') nomproy: string,
+    @Param('depdes') depdes: string,
+  ) {
+    return this.datoscontratoService.filtrarViviendaNueva(
+      codigo,
+      nomproy,
+      depdes,
+    ); // Pasar los parámetros a la función
+  } */
 
   /* @UseGuards(AuthGuard)
   @Get('/compleja/:contcod')
