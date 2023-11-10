@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
-
+import { Connection } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -17,6 +17,7 @@ export class UsersService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly rolesUsersService: RolesUsersService, // Inyecta el servicio de roles_users
+    private connection: Connection,
   ) {}
 
   /* async create(createUserDto: CreateUserDto): Promise<User> {
@@ -132,6 +133,57 @@ export class UsersService {
     }
 
     return user;
+  }
+  ///buscar/nomuser>ivan.choque<carnetuser>8433318
+  async buscarUsuarios(buscar: string): Promise<User[]> {
+    try {
+      console.log('000', buscar);
+
+      const matchUsername = buscar.match(/nomuser>([^<]+)/);
+      const matchCedula = buscar.match(/<carnetuser>([^<]+)/);
+
+      if (!matchUsername && !matchCedula) {
+        throw new Error(
+          'Se requieren al menos uno de los dos argumentos: nomuser y carnetuser.',
+        );
+      }
+
+      const username = matchUsername ? matchUsername[1] : '';
+      const cedula_identidad = matchCedula ? matchCedula[1] : '';
+
+      console.log('111', username);
+      console.log('222', cedula_identidad);
+
+      const conditions = [];
+      const values = [];
+
+      if (username) {
+        conditions.push('username LIKE ?');
+        values.push(`%${username}%`);
+      }
+
+      if (cedula_identidad) {
+        conditions.push('cedula_identidad LIKE ?');
+        values.push(`%${cedula_identidad}%`);
+      }
+
+      const whereClause =
+        conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      const sql = `
+            SELECT * FROM users
+            ${whereClause}
+            ORDER BY RAND()
+            LIMIT 10
+        `;
+
+      const result = await this.connection.query(sql, values);
+
+      return result;
+    } catch (error) {
+      console.error('Error:', error);
+      throw new Error('No se pudieron obtener los usuarios.');
+    }
   }
 
   /*   async update(

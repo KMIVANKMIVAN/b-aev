@@ -326,13 +326,38 @@ export class DatoscontratoService {
       throw new Error('No se pudieron obtener los Datoscontrato.');
     }
   }
-
-  /* async filtrarViviendaNueva(
-    codigo: string,
-    nomproy: string,
-    depdes: string,
-  ): Promise<Datoscontrato[]> {
+  //datoscontrato/buscar/codigo_AEV-nomproy_CONSTRUCCION-depdes_la
+  //datoscontrato/buscar/codigo>AEV<nomproy>CONSTRUCCION<depdes>la
+  //datoscontrato/buscar/<nomproy>CONSTRUCCION<depdes>la
+  //datoscontrato/buscar/codigo>AEV<nomproy>CONSTRUCCION
+  //datoscontrato/buscar/codigo>AEV<
+  //datoscontrato/buscar/<nomproy>CONSTRUCCION<
+  //datoscontrato/buscar/<depdes>la
+  async buscarViviendaNueva(buscar: string): Promise<Datoscontrato[]> {
     try {
+      /* const matchCodigo = buscar.match(/codigo>(.*?)</);
+      const codigo = matchCodigo[1];
+
+      const matchNomproy = buscar.match(/<nomproy>(.*?)</);
+      const nomproy = matchNomproy[1];
+
+      const matchDepdes = buscar.match(/<depdes>(.*)/);
+      const depdes = matchDepdes[1]; */
+
+      const matchCodigo = buscar.match(/codigo>(.*?)</);
+      const codigo = matchCodigo ? matchCodigo[1] : '';
+
+      const matchNomproy = buscar.match(/<nomproy>(.*?)</);
+      const nomproy = matchNomproy ? matchNomproy[1] : '';
+
+      const matchDepdes = buscar.match(/<depdes>(.*)/);
+      const depdes = matchDepdes ? matchDepdes[1] : '';
+
+      console.log('111 ', codigo);
+      console.log('222 ', nomproy);
+      console.log('333 ', depdes);
+      // console.log(" ",);
+
       const conditions = [];
       const values = [];
 
@@ -355,50 +380,23 @@ export class DatoscontratoService {
         conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
       const sql = `
-        (SELECT * FROM datoscontrato
-        ${whereClause}
-        ORDER BY RAND()
-        LIMIT 10)
-        UNION
-        (SELECT * FROM contratosigepro
-        ${whereClause}
-        ORDER BY RAND()
-        LIMIT 10)
-      `;
-
+      (SELECT * FROM datoscontrato
+      ${whereClause}
+      ORDER BY RAND()
+      LIMIT 5) 
+      UNION
+      (SELECT * FROM contratosigepro
+      ${whereClause}
+      ORDER BY RAND()
+      LIMIT 5) 
+    `;
       const result = await this.connection.query(sql, values.concat(values));
 
       return result;
     } catch (error) {
       throw new Error('No se pudieron obtener los Datoscontrato.');
     }
-  } */
-
-  /* async findOneContCodCompleja(contcod: string): Promise<Datoscontrato[]> {
-    try {
-      const sql = `
-        SELECT
-          d.*,
-          d.id AS iddesem,
-          DATE_FORMAT(d.fecha_generado, '%d/%m/%Y') AS fechagenerado,
-          DATE_FORMAT(d.fecha_banco, '%d/%m/%Y') AS fechabanco,
-          d.monto_desembolsado,
-          e.id,
-          e.etapa
-        FROM desembolsos AS d
-        INNER JOIN etapas AS e ON d.estado = e.id
-        WHERE d.estado = 6
-          AND d.cont_cod = ?
-          AND d.titr_cod = 'CT_PL'
-          AND d.ploc_cod IN ('1', '2');
-      `;
-
-      const result = await this.connection.query(sql, [contcod]);
-      return result;
-    } catch (error) {
-      throw new Error('No se pudieron obtener los Datoscontrato.');
-    }
-  } */
+  }
 
   /* update(id: number, updateDatoscontratoDto: UpdateDatoscontratoDto) {
     return `This action updates a #${id} datoscontrato`;

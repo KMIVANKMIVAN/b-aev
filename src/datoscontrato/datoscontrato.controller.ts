@@ -76,20 +76,6 @@ export class DatoscontratoController {
   }
 
   @UseGuards(AuthGuard)
-  @Get('/filtrar/:codigo?/:nomproy?/:depdes?')
-  filtrarViviendaNueva(
-    @Param('codigo') codigo: string,
-    @Param('nomproy') nomproy: string,
-    @Param('depdes') depdes: string,
-  ) {
-    return this.datoscontratoService.filtrarViviendaNueva(
-      codigo,
-      nomproy,
-      depdes,
-    ); // Pasar los parámetros a la función
-  }
-
-  /* @UseGuards(AuthGuard)
   @Get('/filtrar/:codigo/:nomproy/:depdes')
   filtrarViviendaNueva(
     @Param('codigo') codigo: string,
@@ -101,13 +87,12 @@ export class DatoscontratoController {
       nomproy,
       depdes,
     ); // Pasar los parámetros a la función
-  } */
-
-  /* @UseGuards(AuthGuard)
-  @Get('/compleja/:contcod')
-  findOneContCodCompleja(@Param('contcod') contcod: string) {
-    return this.datoscontratoService.findOneContCodCompleja(contcod);
-  } */
+  }
+  @UseGuards(AuthGuard)
+  @Get('/buscar/:buscar')
+  buscarViviendaNueva(@Param('buscar') buscar: string) {
+    return this.datoscontratoService.buscarViviendaNueva(buscar); // Pasar los parámetros a la función
+  }
 
   /* @Patch(':id')
   update(
