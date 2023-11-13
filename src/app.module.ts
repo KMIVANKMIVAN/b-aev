@@ -51,7 +51,7 @@ import { DevolucionesModule } from './devoluciones/devoluciones.module';
     TitularcuentaModule,
     DevolucionesModule,
     AuthModule,
-    TypeOrmModule.forRoot({
+    /* TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
       port: 3306,
@@ -73,8 +73,8 @@ import { DevolucionesModule } from './devoluciones/devoluciones.module';
         Devolucione,
       ],
       synchronize: false, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
-    }),
-    /* TypeOrmModule.forRoot({
+    }), */
+    TypeOrmModule.forRoot({
       type: 'mysql',
       host: '10.10.1.9',
       port: 3306,
@@ -95,8 +95,8 @@ import { DevolucionesModule } from './devoluciones/devoluciones.module';
         Titularcuenta,
         Devolucione,
       ], // Agrega aquí tus entidades
-      synchronize: true, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
-    }), */
+      synchronize: false, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
