@@ -9,7 +9,9 @@ describe('PlanillasporcontratoService', () => {
       providers: [PlanillasporcontratoService],
     }).compile();
 
-    service = module.get<PlanillasporcontratoService>(PlanillasporcontratoService);
+    service = module.get<PlanillasporcontratoService>(
+      PlanillasporcontratoService,
+    );
   });
 
   it('should be defined', () => {

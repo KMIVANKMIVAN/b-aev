@@ -1,4 +1,3 @@
-// export class Planillasigepro {}
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('planillasigepro')
@@ -6,46 +5,46 @@ export class Planillasigepro {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ nullable: true })
   id_sap: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ nullable: true })
   proy_cod: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ nullable: true })
   proy_des: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ nullable: true })
   cont: string;
 
   @Column({ type: 'int', nullable: true })
   comp_cod: number;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ nullable: true })
   ploc_des: string;
 
-  @Column({ type: 'double', precision: 22, scale: 2, nullable: true })
+  @Column({ type: 'double', nullable: true, precision: 22, scale: 2 })
   retencion_anticipo: number;
 
-  @Column({ type: 'double', precision: 22, scale: 2, nullable: true })
+  @Column({ type: 'double', nullable: true, precision: 22, scale: 2 })
   desembolso: number;
 
-  @Column({ type: 'double', precision: 22, scale: 2, nullable: true })
+  @Column({ type: 'double', nullable: true, precision: 22, scale: 2 })
   modificatorio: number;
 
-  @Column({ type: 'double', precision: 22, scale: 2, nullable: true })
+  @Column({ type: 'double', nullable: true, precision: 22, scale: 2 })
   multas: number;
 
-  @Column({ type: 'double', precision: 22, scale: 2, nullable: true })
+  @Column({ type: 'double', nullable: true, precision: 22, scale: 2 })
   planillado: number;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ nullable: true })
   titr_cod: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ nullable: true })
   ploc_cod: string;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ nullable: true })
   orden: string;
 
   @Column({ type: 'int', default: 0 })

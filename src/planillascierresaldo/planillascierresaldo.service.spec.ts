@@ -9,7 +9,9 @@ describe('PlanillascierresaldoService', () => {
       providers: [PlanillascierresaldoService],
     }).compile();
 
-    service = module.get<PlanillascierresaldoService>(PlanillascierresaldoService);
+    service = module.get<PlanillascierresaldoService>(
+      PlanillascierresaldoService,
+    );
   });
 
   it('should be defined', () => {

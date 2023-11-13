@@ -4,8 +4,6 @@ import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { Connection } from 'typeorm';
 
-import { CreateDesembolsoDto } from './dto/create-desembolso.dto';
-import { UpdateDesembolsoDto } from './dto/update-desembolso.dto';
 import { Desembolso } from './entities/desembolso.entity';
 
 @Injectable()
@@ -15,9 +13,6 @@ export class DesembolsosService {
     private readonly desembolsoRepository: Repository<Desembolso>,
     private connection: Connection,
   ) {}
-  /* create(createDesembolsoDto: CreateDesembolsoDto) {
-    return 'This action adds a new desembolso';
-  } */
 
   async findAll(): Promise<Desembolso[]> {
     try {
@@ -29,15 +24,15 @@ export class DesembolsosService {
   async desenbolsoetapas(): Promise<Desembolso[]> {
     try {
       const queryBuilder = this.desembolsoRepository
-        .createQueryBuilder('d') // Alias 'd' para la tabla "desembolsos"
+        .createQueryBuilder('d')
         .select([
-          'd.*', // Seleccionar todas las columnas de la tabla "desembolsos"
+          'd.*',
           'd.id AS iddesem',
           "DATE_FORMAT(d.fecha_generado, '%d/%m/%Y') AS fechagenerado",
           "DATE_FORMAT(d.fecha_banco, '%d/%m/%Y') AS fechabanco",
           'd.monto_desembolsado',
         ])
-        .innerJoin('etapas', 'e', 'd.estado = e.id') // JOIN con la tabla "etapas"
+        .innerJoin('etapas', 'e', 'd.estado = e.id')
         .where('d.estado = :estado', { estado: 6 })
         .andWhere('d.cont_cod = :cont_cod', { cont_cod: '4367' })
         .andWhere('d.titr_cod = :titr_cod', { titr_cod: 'CT_PL' })
@@ -60,12 +55,4 @@ export class DesembolsosService {
 
     return desembolso;
   }
-
-  /* update(id: number, updateDesembolsoDto: UpdateDesembolsoDto) {
-    return `This action updates a #${id} desembolso`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} desembolso`;
-  } */
 }

@@ -3,8 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 
-import { CreateContratosigeproDto } from './dto/create-contratosigepro.dto';
-import { UpdateContratosigeproDto } from './dto/update-contratosigepro.dto';
 import { Contratosigepro } from './entities/contratosigepro.entity';
 
 @Injectable()
@@ -13,9 +11,6 @@ export class ContratosigeproService {
     @InjectRepository(Contratosigepro)
     private readonly contratosigeproRepository: Repository<Contratosigepro>,
   ) {}
-  /* create(createContratosigeproDto: CreateContratosigeproDto) {
-    return 'This action adds a new contratosigepro';
-  } */
 
   async findAll(): Promise<Contratosigepro[]> {
     try {
@@ -36,12 +31,4 @@ export class ContratosigeproService {
 
     return contratosigepro;
   }
-
-  /* update(id: number, updateContratosigeproDto: UpdateContratosigeproDto) {
-    return `This action updates a #${id} contratosigepro`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} contratosigepro`;
-  } */
 }

@@ -11,7 +11,9 @@ describe('PlanillasigeproController', () => {
       providers: [PlanillasigeproService],
     }).compile();
 
-    controller = module.get<PlanillasigeproController>(PlanillasigeproController);
+    controller = module.get<PlanillasigeproController>(
+      PlanillasigeproController,
+    );
   });
 
   it('should be defined', () => {

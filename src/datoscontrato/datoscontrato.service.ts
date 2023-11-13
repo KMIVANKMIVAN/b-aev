@@ -6,8 +6,6 @@ import { Connection } from 'typeorm';
 
 import { HttpService } from '@nestjs/axios';
 
-import { CreateDatoscontratoDto } from './dto/create-datoscontrato.dto';
-import { UpdateDatoscontratoDto } from './dto/update-datoscontrato.dto';
 import { Datoscontrato } from './entities/datoscontrato.entity';
 
 @Injectable()
@@ -19,63 +17,38 @@ export class DatoscontratoService {
     private httpService: HttpService,
   ) {}
 
-  /* create(createDatoscontratoDto: CreateDatoscontratoDto) {
-    return 'This action adds a new datoscontrato';
-  } */
-
   findAll(): Promise<Datoscontrato[]> {
     const url = 'http://sitahu.aevivienda.gob.bo/ServicioWeb/vigente/4760619';
     const authorizationToken =
       'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZF9kZXZpY2VpbmciOjEsImluc3RpdHV0aW9uIjoiQWdlbmNpYSBFc3RhdGFsIGRlIFZpdmllbmRhIiwic3lzdGVtIjoiVmlcdTAwZTF0aWNvcyIsImRhdGFjcmVhdGVkIjoxNjY4MTg1OTI2LCJkYXRlZmluaXNoZWQiOjAsIkFQSV9USU1FIjoxNjY4MTg1OTI2fQ.iMvwfyzUolxC_fpRjY606ZHNkWU0WlX4jyykCgv-Xus';
 
     const headers = {
-      Authorization: `Bearer ${authorizationToken}`, // Asumiendo que es un token tipo Bearer
+      Authorization: `Bearer ${authorizationToken}`,
     };
     const headers2 = {
-      Authorization: authorizationToken, // Asumiendo que es un token tipo Bearer
+      Authorization: authorizationToken,
     };
 
     console.log('000 ', headers);
     console.log('111 ', headers2);
 
     const requestOptions = {
-      headers: headers, // Pasa las cabeceras aquí
+      headers: headers,
     };
 
     console.log('222 ', requestOptions);
 
     return this.httpService
-      .get(url, requestOptions) // Pasa las opciones en lugar de null
+      .get(url, requestOptions)
       .toPromise()
       .then((response) => {
-        // Aquí puedes procesar la respuesta antes de devolverla como una promesa
-        return response.data as Datoscontrato[]; // Asegúrate de que response.data tenga el formato correcto
+        return response.data as Datoscontrato[];
       })
       .catch((error) => {
-        // Manejar errores aquí si es necesario
-        throw error; // O puedes manejar el error de otra manera
+        throw error;
       });
-
-    /* return this.httpService
-      .get('https://pokeapi.co/api/v2/pokemon/ditto')
-      .toPromise()
-      .then((response) => {
-        // Aquí puedes procesar la respuesta antes de devolverla como una promesa
-        return response.data as Datoscontrato[]; // Asegúrate de que response.data tenga el formato correcto
-      })
-      .catch((error) => {
-        // Manejar errores aquí si es necesario
-        throw error; // O puedes manejar el error de otra manera
-      }); */
   }
 
-  /* async findAll(): Promise<Datoscontrato[]> {
-    try {
-      return await this.datoscontratoRepository.find();
-    } catch (error) {
-      throw new Error('No se pudieron obtener los Datoscontrato.');
-    }
-  } */
   async findAllDatosContrato(): Promise<Datoscontrato[]> {
     try {
       const sql = `
@@ -168,23 +141,6 @@ export class DatoscontratoService {
     }
   }
 
-  /* async findOneCodigo(codigo: string): Promise<Datoscontrato[]> {
-    try {
-      const sql = `
-        SELECT * FROM datoscontrato
-        WHERE proy_cod = ?
-        UNION
-        SELECT * FROM contratosigepro
-        WHERE proy_cod = ?
-      `;
-
-      const result = await this.connection.query(sql, [codigo, codigo]);
-      return result;
-    } catch (error) {
-      throw new Error('No se pudieron obtener los Datoscontrato.');
-    }
-  } */
-
   async findOneCodigo(codigo: string): Promise<Datoscontrato[]> {
     try {
       const sql = `
@@ -208,27 +164,6 @@ export class DatoscontratoService {
       throw new Error('No se pudieron obtener los Datoscontrato.');
     }
   }
-
-  /* async findOneCodigo(codigo: string): Promise<Datoscontrato[]> {
-    try {
-      const sql = `
-        SELECT * FROM datoscontrato
-        WHERE proy_cod LIKE ?
-        UNION
-        SELECT * FROM contratosigepro
-        WHERE proy_cod LIKE ?
-        LIMIT 10
-      `;
-
-      const result = await this.connection.query(sql, [
-        `%${codigo}%`,
-        `%${codigo}%`,
-      ]);
-      return result;
-    } catch (error) {
-      throw new Error('No se pudieron obtener los Datoscontrato.');
-    }
-  } */
 
   async findOneNomProy(nomproy: string): Promise<Datoscontrato[]> {
     try {
@@ -326,24 +261,8 @@ export class DatoscontratoService {
       throw new Error('No se pudieron obtener los Datoscontrato.');
     }
   }
-  //datoscontrato/buscar/codigo_AEV-nomproy_CONSTRUCCION-depdes_la
-  //datoscontrato/buscar/codigo>AEV<nomproy>CONSTRUCCION<depdes>la
-  //datoscontrato/buscar/<nomproy>CONSTRUCCION<depdes>la
-  //datoscontrato/buscar/codigo>AEV<nomproy>CONSTRUCCION
-  //datoscontrato/buscar/codigo>AEV<
-  //datoscontrato/buscar/<nomproy>CONSTRUCCION<
-  //datoscontrato/buscar/<depdes>la
   async buscarViviendaNueva(buscar: string): Promise<Datoscontrato[]> {
     try {
-      /* const matchCodigo = buscar.match(/codigo>(.*?)</);
-      const codigo = matchCodigo[1];
-
-      const matchNomproy = buscar.match(/<nomproy>(.*?)</);
-      const nomproy = matchNomproy[1];
-
-      const matchDepdes = buscar.match(/<depdes>(.*)/);
-      const depdes = matchDepdes[1]; */
-
       const matchCodigo = buscar.match(/codigo>(.*?)</);
       const codigo = matchCodigo ? matchCodigo[1] : '';
 
@@ -356,7 +275,6 @@ export class DatoscontratoService {
       console.log('111 ', codigo);
       console.log('222 ', nomproy);
       console.log('333 ', depdes);
-      // console.log(" ",);
 
       const conditions = [];
       const values = [];
@@ -397,12 +315,4 @@ export class DatoscontratoService {
       throw new Error('No se pudieron obtener los Datoscontrato.');
     }
   }
-
-  /* update(id: number, updateDatoscontratoDto: UpdateDatoscontratoDto) {
-    return `This action updates a #${id} datoscontrato`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} datoscontrato`;
-  } */
 }

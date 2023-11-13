@@ -11,7 +11,9 @@ describe('PlanillasporcontratoController', () => {
       providers: [PlanillasporcontratoService],
     }).compile();
 
-    controller = module.get<PlanillasporcontratoController>(PlanillasporcontratoController);
+    controller = module.get<PlanillasporcontratoController>(
+      PlanillasporcontratoController,
+    );
   });
 
   it('should be defined', () => {

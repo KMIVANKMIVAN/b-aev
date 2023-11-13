@@ -1,7 +1,6 @@
-// export class Planillascierresaldo {}
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity()
+@Entity('planillascierresaldo')
 export class Planillascierresaldo {
   @PrimaryGeneratedColumn()
   id: number;

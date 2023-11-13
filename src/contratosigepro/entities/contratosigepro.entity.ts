@@ -1,4 +1,3 @@
-// contratosigepro.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('contratosigepro')

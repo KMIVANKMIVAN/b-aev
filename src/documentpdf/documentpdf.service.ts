@@ -1,8 +1,21 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Connection } from 'typeorm';
+
+import { HttpService } from '@nestjs/axios';
 import * as fs from 'fs';
+
+import { Documentpdf } from './entities/documentpdf.entity';
 
 @Injectable()
 export class DocumentpdfService {
+  constructor(
+    @InjectRepository(Documentpdf)
+    private readonly documentpdfRepository: Repository<Documentpdf>,
+    private connection: Connection,
+    private httpService: HttpService,
+  ) {}
   async guardarPdf(file: Express.Multer.File) {
     if (file) {
       if (file.mimetype !== 'application/pdf') {
@@ -10,7 +23,6 @@ export class DocumentpdfService {
       }
 
       if (file.size > 10 * 1024 * 1024) {
-        // 10MB en bytes
         throw new BadRequestException(
           'El archivo excede el tamaño máximo de 10MB',
         );
@@ -48,5 +60,29 @@ export class DocumentpdfService {
 
   async concatenarNombreConFechaHora(dateTime: string) {
     return `haciendopruebas-${dateTime}.pdf`;
+  }
+
+  async buscarViviendaNueva(buscar: string): Promise<Documentpdf[]> {
+    try {
+      const sql = `
+        SELECT * FROM (
+          SELECT * FROM datoscontrato
+          WHERE proy_cod LIKE '%${buscar}%' OR cont_des LIKE '%${buscar}%'
+          UNION
+          SELECT * FROM contratosigepro
+          WHERE proy_cod LIKE '%${buscar}%' OR cont_des LIKE '%${buscar}%'
+          ) AS resultados
+          ORDER BY RAND()
+          LIMIT 10;
+      `;
+
+      const result = await this.connection.query(sql);
+      return result;
+    } catch (error) {
+      console.error('Error al obtener Datoscontrato:', error.message);
+      throw new Error(
+        'No se pudieron obtener los Datoscontrato. Detalles en el registro.',
+      );
+    }
   }
 }

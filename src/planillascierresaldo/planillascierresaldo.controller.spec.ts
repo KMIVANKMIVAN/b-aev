@@ -11,7 +11,9 @@ describe('PlanillascierresaldoController', () => {
       providers: [PlanillascierresaldoService],
     }).compile();
 
-    controller = module.get<PlanillascierresaldoController>(PlanillascierresaldoController);
+    controller = module.get<PlanillascierresaldoController>(
+      PlanillascierresaldoController,
+    );
   });
 
   it('should be defined', () => {

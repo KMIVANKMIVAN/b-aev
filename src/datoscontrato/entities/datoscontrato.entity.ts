@@ -1,4 +1,3 @@
-// export class Datoscontrato {}
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('datoscontrato')

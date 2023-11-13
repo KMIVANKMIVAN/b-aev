@@ -16,17 +16,10 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly rolesUsersService: RolesUsersService, // Inyecta el servicio de roles_users
+    private readonly rolesUsersService: RolesUsersService,
     private connection: Connection,
   ) {}
 
-  /* async create(createUserDto: CreateUserDto): Promise<User> {
-    const newUser = this.userRepository.create({
-      ...createUserDto,
-      habilitado: createUserDto.habilitado ? 1 : 0, // Convertir boolean a number
-    });
-    return await this.userRepository.save(newUser);
-  } */
   async create(createUserDto: CreateUserDto): Promise<User> {
     try {
       console.log(createUserDto.expedido);
@@ -52,15 +45,12 @@ export class UsersService {
 
       const iniciales = obtenerIniciales(createUserDto.nombre);
 
-      const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30'; // Tu clave secreta
+      const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30';
 
-      // Crear un objeto hash con el algoritmo SHA-256
       const sha256Hash = crypto.createHmac('sha256', secretKey);
 
-      // Actualizar el hash con los datos que deseas encriptar
       sha256Hash.update(createUserDto.password);
 
-      // Calcular el hash en formato hexadecimal
       const hashedData = sha256Hash.digest('hex');
 
       const newUser = this.userRepository.create({
@@ -80,14 +70,11 @@ export class UsersService {
         password: hashedData,
       });
 
-      // Guardar el nuevo usuario en la base de datos
       const savedUser = await this.userRepository.save(newUser);
 
-      // Llama al servicio de roles_users para crear un nuevo registro
-      // Pasando el user_id del usuario recién creado y el role_id adecuado
       const createRolesUserDto = {
         user_id: savedUser.id,
-        role_id: 1, // Reemplaza 1 por el role_id correcto
+        role_id: 1,
       };
       await this.rolesUsersService.create(createRolesUserDto);
 
@@ -99,21 +86,14 @@ export class UsersService {
     }
   }
 
-  /* async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
-  } */
   async findAll(): Promise<User[]> {
     try {
       return await this.userRepository.find();
     } catch (error) {
-      // Puedes personalizar la respuesta de error aquí si lo deseas
       throw new Error('No se pudieron obtener los usuarios.');
     }
   }
 
-  /* async findOne(id: number): Promise<User | undefined> {
-    return await this.userRepository.findOne({ where: { id } });
-  } */
   async findOne(id: number): Promise<User | undefined> {
     const user = await this.userRepository.findOne({ where: { id } });
 
@@ -134,51 +114,18 @@ export class UsersService {
 
     return user;
   }
-  ///buscar/nomuser>ivan.choque<carnetuser>8433318
   async buscarUsuarios(buscar: string): Promise<User[]> {
     try {
-      console.log('000', buscar);
-
-      const matchUsername = buscar.match(/nomuser>([^<]+)/);
-      const matchCedula = buscar.match(/<carnetuser>([^<]+)/);
-
-      if (!matchUsername && !matchCedula) {
-        throw new Error(
-          'Se requieren al menos uno de los dos argumentos: nomuser y carnetuser.',
-        );
-      }
-
-      const username = matchUsername ? matchUsername[1] : '';
-      const cedula_identidad = matchCedula ? matchCedula[1] : '';
-
-      console.log('111', username);
-      console.log('222', cedula_identidad);
-
-      const conditions = [];
-      const values = [];
-
-      if (username) {
-        conditions.push('username LIKE ?');
-        values.push(`%${username}%`);
-      }
-
-      if (cedula_identidad) {
-        conditions.push('cedula_identidad LIKE ?');
-        values.push(`%${cedula_identidad}%`);
-      }
-
-      const whereClause =
-        conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-
       const sql = `
-            SELECT * FROM users
-            ${whereClause}
-            ORDER BY RAND()
-            LIMIT 10
-        `;
+        SELECT * FROM (
+          SELECT * FROM users
+          WHERE username LIKE '%${buscar}%' OR cedula_identidad LIKE '%${buscar}%'
+          ) AS resultados
+          ORDER BY RAND()
+          LIMIT 10;
+      `;
 
-      const result = await this.connection.query(sql, values);
-
+      const result = await this.connection.query(sql);
       return result;
     } catch (error) {
       console.error('Error:', error);
@@ -186,18 +133,6 @@ export class UsersService {
     }
   }
 
-  /*   async update(
-    id: number,
-    updateUserDto: UpdateUserDto,
-  ): Promise<User | undefined> {
-    const { habilitado, ...rest } = updateUserDto;
-    const updateData: Partial<User> = {
-      ...rest,
-      habilitado: habilitado ? 1 : 0,
-    };
-    await this.userRepository.update(id, updateData);
-    return this.findOne(id);
-  } */
   async update(
     id: number,
     updateUserDto: UpdateUserDto,
@@ -212,70 +147,11 @@ export class UsersService {
       await this.userRepository.update(id, updateData);
       return this.findOne(id);
     } catch (error) {
-      // Puedes personalizar la respuesta de error aquí si lo deseas
       throw new Error(
         `No se pudo actualizar el usuario. Usuario con ID ${id} no encontrado`,
       );
     }
   }
-  /* async update(
-    id: number,
-    updateUserDto: UpdateUserDto,
-  ): Promise<User | undefined> {
-    try {
-      const { habilitado, password, ...rest } = updateUserDto;
-
-      // Si se proporcionó una nueva contraseña, generamos un hash de la misma
-      let hashedPassword: string | undefined = undefined;
-      if (password) {
-        hashedPassword = await bcrypt.hash(password, 10);
-      }
-
-      const updateData: Partial<User> = {
-        ...rest,
-        habilitado: habilitado ? 1 : 0,
-      };
-
-      // Si tenemos una contraseña hasheada, la incluimos en los datos de actualización
-      if (hashedPassword) {
-        updateData.password = hashedPassword;
-      }
-
-      await this.userRepository.update(id, updateData);
-      return this.findOne(id);
-    } catch (error) {
-      // Puedes personalizar la respuesta de error aquí si lo deseas
-      throw new Error(
-        `No se pudo actualizar el usuario. Usuario con ID ${id} no encontrado`,
-      );
-    }
-  } */
-  /* async updatePassword(
-    id: number,
-    newPassword: string,
-  ): Promise<User | undefined> {
-    try {
-      // Genera un hash de la nueva contraseña
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-      // Crea un objeto de actualización con la nueva contraseña
-      const updateData: Partial<User> = {
-        password: hashedPassword,
-        prioridad: 1,
-      };
-
-      // Actualiza la contraseña del usuario con ID específico
-      await this.userRepository.update(id, updateData);
-
-      // Devuelve el usuario actualizado (opcional)
-      return this.findOne(id);
-    } catch (error) {
-      // Puedes personalizar la respuesta de error aquí si lo deseas
-      throw new Error(
-        `No se pudo actualizar la contraseña del usuario. Usuario con ID ${id} no encontrado`,
-      );
-    }
-  } */
   async updatePassword(
     id: number,
     antiguop: string,
@@ -283,34 +159,28 @@ export class UsersService {
   ): Promise<User | undefined> {
     try {
       const user = await this.findOne(id);
-      const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30'; // Tu clave secreta
+      const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30';
 
-      // Crear un objeto hash con el algoritmo SHA-256
       const sha256Hash = crypto.createHmac('sha256', secretKey);
 
-      // Actualizar el hash con los datos que deseas encriptar
       sha256Hash.update(antiguop);
 
-      // Calcular el hash en formato hexadecimal
       const anti = sha256Hash.digest('hex');
 
       if (anti === user.password) {
         console.log('si es la antigua');
         const sha256HashNew = crypto.createHmac('sha256', secretKey);
 
-        // Actualizar el hash con los datos que deseas encriptar
         sha256HashNew.update(updateUserDto.password);
         const newPassword = sha256HashNew.digest('hex');
 
         const updateData: Partial<User> = {
-          prioridad: 1, // Establece la prioridad en 1
-          password: newPassword, // Actualiza la contraseña
+          prioridad: 1,
+          password: newPassword,
         };
 
-        // Actualiza el usuario con ID específico
         await this.userRepository.update(id, updateData);
 
-        // Devuelve el usuario actualizado (opcional)
         return this.findOne(id);
       } else {
         throw new Error(
@@ -318,7 +188,6 @@ export class UsersService {
         );
       }
     } catch (error) {
-      // Puedes personalizar la respuesta de error aquí si lo deseas
       throw error;
     }
   }
@@ -327,79 +196,36 @@ export class UsersService {
     updateUserDto: UpdateUserDto,
   ): Promise<User | undefined> {
     try {
-      // Genera un hash de la nueva contraseña
-      const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30'; // Tu clave secreta
+      const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30';
 
-      // Crear un objeto hash con el algoritmo SHA-256
       const sha256Hash = crypto.createHmac('sha256', secretKey);
 
-      // Actualizar el hash con los datos que deseas encriptar
       sha256Hash.update(updateUserDto.password);
 
-      // Calcular el hash en formato hexadecimal
       const hashedData = sha256Hash.digest('hex');
 
       const updateData: Partial<User> = {
-        prioridad: 0, // Establece la prioridad en 1
-        password: hashedData, // Actualiza la contraseña
+        prioridad: 0,
+        password: hashedData,
       };
 
-      // Actualiza el usuario con ID específico
       await this.userRepository.update(id, updateData);
 
-      // Devuelve el usuario actualizado (opcional)
       return this.findOne(id);
     } catch (error) {
-      // Puedes personalizar la respuesta de error aquí si lo deseas
       throw new Error(
         `No se pudo actualizar el usuario. Usuario con ID ${id} no encontrado`,
       );
     }
   }
 
-  /* async remove(id: number): Promise<void> {
-    await this.userRepository.delete(id);
-  } */
   async remove(id: number): Promise<void> {
     try {
       await this.userRepository.delete(id);
     } catch (error) {
-      // Puedes personalizar la respuesta de error aquí si lo deseas
       throw new Error(
         `No se pudo eliminar el usuario. Usuario con ID ${id} no encontrado`,
       );
     }
   }
-
-  /* create(createUserDto: CreateUserDto) {
-    // return 'This action adds a new user';
-    // retornaremos en formato JSON
-    return {
-      mensaje: 'accion de crear',
-      cuerpo: createUserDto,
-    };
-  }
-
-  findAll() {
-    return `This action returns all users`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return {
-      id,
-      updateUserDto,
-    };
-  }
-
-  remove(id: number) {
-    return {
-      id,
-    };
-  } */
-
-  //funciones
 }

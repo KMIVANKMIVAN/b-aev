@@ -5,8 +5,10 @@ import { DocumentpdfController } from './documentpdf.controller';
 
 import { Documentpdf } from './entities/documentpdf.entity';
 
+import { HttpModule } from '@nestjs/axios';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([Documentpdf])],
+  imports: [HttpModule, TypeOrmModule.forFeature([Documentpdf])],
   controllers: [DocumentpdfController],
   providers: [DocumentpdfService],
   exports: [DocumentpdfService],

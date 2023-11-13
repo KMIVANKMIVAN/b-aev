@@ -1,9 +1,15 @@
-// export class CreatePlanillasporcontratoDto {}
-import { IsOptional, IsString, IsNumber, IsNotEmpty } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsNotEmpty,
+  IsInt,
+  IsPositive,
+} from 'class-validator';
 
 export class CreatePlanillasporcontratoDto {
-  @IsNotEmpty() // Indicamos que no debe estar vacío (no nulo)
-  @IsNumber()
+  @IsNotEmpty()
+  @IsInt()
   id: number;
 
   @IsOptional()
@@ -23,7 +29,7 @@ export class CreatePlanillasporcontratoDto {
   cont: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   comp_cod: number;
 
   @IsOptional()
@@ -32,22 +38,27 @@ export class CreatePlanillasporcontratoDto {
 
   @IsOptional()
   @IsNumber()
+  @IsPositive()
   retencion_anticipo: number;
 
   @IsOptional()
   @IsNumber()
+  @IsPositive()
   desembolso: number;
 
   @IsOptional()
   @IsNumber()
+  @IsPositive()
   modificatorio: number;
 
   @IsOptional()
   @IsNumber()
+  @IsPositive()
   multas: number;
 
   @IsOptional()
   @IsNumber()
+  @IsPositive()
   planillado: number;
 
   @IsOptional()
@@ -63,6 +74,6 @@ export class CreatePlanillasporcontratoDto {
   orden: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   activo: number;
 }

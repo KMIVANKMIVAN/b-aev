@@ -1,5 +1,7 @@
 import {
   Controller,
+  Get,
+  Param,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -18,5 +20,10 @@ export class DocumentpdfController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
     return this.documentpdfService.guardarPdf(file);
+  }
+  @UseGuards(AuthGuard)
+  @Get('/buscar/:buscar')
+  buscarViviendaNueva(@Param('buscar') buscar: string) {
+    return this.documentpdfService.buscarViviendaNueva(buscar);
   }
 }

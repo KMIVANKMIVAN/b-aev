@@ -55,7 +55,7 @@ export class RolesUsersService {
   ): Promise<RolesUser> {
     try {
       const { role_id } = updateRolesUserDto;
-      const existingRolesUser = await this.findOne(user_id); // Verificar si el registro existe
+      const existingRolesUser = await this.findOne(user_id);
       existingRolesUser.role_id = role_id;
       return await this.rolesuserRepository.save(existingRolesUser);
     } catch (error) {
@@ -64,8 +64,4 @@ export class RolesUsersService {
       );
     }
   }
-
-  /* remove(id: number) {
-    return `This action removes a #${id} rolesUser`;
-  } */
 }

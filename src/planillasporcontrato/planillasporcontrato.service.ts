@@ -4,8 +4,6 @@ import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { Connection } from 'typeorm';
 
-import { CreatePlanillasporcontratoDto } from './dto/create-planillasporcontrato.dto';
-import { UpdatePlanillasporcontratoDto } from './dto/update-planillasporcontrato.dto';
 import { Planillasporcontrato } from './entities/planillasporcontrato.entity';
 
 @Injectable()
@@ -15,10 +13,6 @@ export class PlanillasporcontratoService {
     private readonly planillasporcontratoRepository: Repository<Planillasporcontrato>,
     private connection: Connection,
   ) {}
-
-  /* create(createPlanillasporcontratoDto: CreatePlanillasporcontratoDto) {
-    return 'This action adds a new planillasporcontrato';
-  } */
 
   async findAll(): Promise<Planillasporcontrato[]> {
     try {
@@ -42,15 +36,4 @@ export class PlanillasporcontratoService {
 
     return planillasporcontrato;
   }
-
-  /* update(
-    id: number,
-    updatePlanillasporcontratoDto: UpdatePlanillasporcontratoDto,
-  ) {
-    return `This action updates a #${id} planillasporcontrato`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} planillasporcontrato`;
-  } */
 }

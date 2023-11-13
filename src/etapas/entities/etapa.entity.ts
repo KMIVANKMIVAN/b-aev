@@ -1,4 +1,3 @@
-// export class Etapa {}
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('etapas')

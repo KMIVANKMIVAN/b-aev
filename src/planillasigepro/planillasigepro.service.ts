@@ -4,8 +4,6 @@ import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { Connection } from 'typeorm';
 
-import { CreatePlanillasigeproDto } from './dto/create-planillasigepro.dto';
-import { UpdatePlanillasigeproDto } from './dto/update-planillasigepro.dto';
 import { Planillasigepro } from './entities/planillasigepro.entity';
 
 @Injectable()
@@ -15,10 +13,6 @@ export class PlanillasigeproService {
     private readonly planillasigeproRepository: Repository<Planillasigepro>,
     private connection: Connection,
   ) {}
-
-  /* create(createPlanillasigeproDto: CreatePlanillasigeproDto) {
-    return 'This action adds a new planillasigepro';
-  } */
 
   async findAll(): Promise<Planillasigepro[]> {
     try {
@@ -39,12 +33,4 @@ export class PlanillasigeproService {
 
     return planillasigepro;
   }
-
-  /* update(id: number, updatePlanillasigeproDto: UpdatePlanillasigeproDto) {
-    return `This action updates a #${id} planillasigepro`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} planillasigepro`;
-  } */
 }

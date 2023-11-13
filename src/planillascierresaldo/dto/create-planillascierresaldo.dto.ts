@@ -1,16 +1,14 @@
-// export class CreatePlanillascierresaldoDto {}
 import {
   IsOptional,
   IsString,
   IsNumber,
   IsNotEmpty,
   IsInt,
-  IsBoolean,
   IsPositive,
 } from 'class-validator';
 
 export class CreatePlanillascierresaldoDto {
-  @IsNotEmpty() // Indicamos que no debe estar vacío (no nulo)
+  @IsNotEmpty()
   @IsInt()
   id: number;
 
@@ -31,7 +29,7 @@ export class CreatePlanillascierresaldoDto {
   cont: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   comp_cod: number;
 
   @IsOptional()
@@ -77,6 +75,5 @@ export class CreatePlanillascierresaldoDto {
 
   @IsOptional()
   @IsInt()
-  @IsBoolean()
   activo: number;
 }

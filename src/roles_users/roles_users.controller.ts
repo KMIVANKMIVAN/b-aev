@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   UseGuards,
 } from '@nestjs/common';
 import { RolesUsersService } from './roles_users.service';
@@ -32,7 +31,7 @@ export class RolesUsersController {
   @UseGuards(AuthGuard)
   @Get(':id')
   findOne(@Param('id') user_id: number) {
-    return this.rolesUsersService.findOne(user_id); // Ya no necesitas convertir user_id a número con +user_id
+    return this.rolesUsersService.findOne(user_id);
   }
 
   @Patch(':id')
@@ -40,11 +39,6 @@ export class RolesUsersController {
     @Param('id') user_id: number,
     @Body() updateRolesUserDto: UpdateRolesUserDto,
   ) {
-    return this.rolesUsersService.update(user_id, updateRolesUserDto); // También, ya no necesitas convertir user_id a número
+    return this.rolesUsersService.update(user_id, updateRolesUserDto);
   }
-
-  /* @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.rolesUsersService.remove(+id);
-  } */
 }

@@ -1,4 +1,3 @@
-// contratosigepro.dto.ts
 import { IsString, IsInt, IsOptional, IsNumber, IsDate } from 'class-validator';
 
 export class CreateContratosigeproDto {

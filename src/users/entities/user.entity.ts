@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-@Entity('users') // Nombre de la tabla en la base de datos
+@Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -66,8 +66,4 @@ export class User {
 
   @Column({ type: 'text', nullable: true })
   theme: string | null;
-
-  /* @OneToOne(() => RolesUser, (rolesUser) => rolesUser.user)
-  @JoinColumn()
-  rolesUser: RolesUser; */
 }

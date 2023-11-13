@@ -1,4 +1,3 @@
-// export class CreateRolesUserDto {}
 import { IsInt } from 'class-validator';
 import { PrimaryColumn } from 'typeorm';
 

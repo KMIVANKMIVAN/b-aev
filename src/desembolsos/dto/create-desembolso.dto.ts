@@ -1,4 +1,3 @@
-// export class CreateDesembolsoDto {}
 import {
   IsOptional,
   IsString,

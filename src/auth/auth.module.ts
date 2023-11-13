@@ -7,7 +7,6 @@ import { JwtModule } from '@nestjs/jwt';
 
 import { UsersModule } from '../users/users.module';
 
-// import { HttpService } from '@nestjs/axios';
 import { HttpModule } from '@nestjs/axios';
 
 @Module({
@@ -22,13 +21,6 @@ import { HttpModule } from '@nestjs/axios';
   ],
   controllers: [AuthController],
   providers: [AuthService],
-  // para que sea gloval
-  /* providers: [
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
-  ], */
   exports: [AuthService],
 })
 export class AuthModule {}
