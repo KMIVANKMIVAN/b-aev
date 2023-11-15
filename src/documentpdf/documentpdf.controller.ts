@@ -7,6 +7,7 @@ import {
   UseInterceptors,
   UseGuards,
   Res,
+  Delete,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentpdfService } from './documentpdf.service';
@@ -50,6 +51,25 @@ export class DocumentpdfController {
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
     return this.documentpdfService.guardarPdf(file);
   } */
+  @Get('/view/:fileName')
+  async viewPdf(@Param('fileName') fileName: string, @Res() res: Response) {
+    return this.documentpdfService.verPdf(fileName, res);
+  }
+
+  @Get('/viewbypartialName/:partialName')
+  async viewPdfByPartialName(
+    @Param('partialName') partialName: string,
+    @Res() res: Response,
+  ) {
+    return this.documentpdfService.verPdfByPartialName(partialName, res);
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete('/delete/:fileName')
+  async deletePdf(@Param('fileName') fileName: string, @Res() res: Response) {
+    await this.documentpdfService.eliminarPdf(fileName, res);
+  }
+
   @UseGuards(AuthGuard)
   @Get('/buscar/:buscar')
   buscarViviendaNueva(@Param('buscar') buscar: string) {
