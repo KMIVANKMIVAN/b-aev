@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { DatoscontratoService } from './datoscontrato.service';
 
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -29,17 +29,9 @@ export class DatoscontratoController {
     return this.datoscontratoService.findOneContCod(contcod);
   }
   @UseGuards(AuthGuard)
-  @Get('/compleja/:contcod/:valortitrcod')
-  findOneContCodCompleja(
-    @Param('contcod') contcod: string,
-    @Param('valortitrcod') valortitrcod: string,
-    @Query('ploccod') ploccod: string[],
-  ) {
-    return this.datoscontratoService.findOneContCodCompleja(
-      contcod,
-      valortitrcod,
-      ploccod,
-    );
+  @Get('/compleja/:contcod')
+  findOneContCodCompleja(@Param('contcod') contcod: string) {
+    return this.datoscontratoService.findOneContCodCompleja(contcod);
   }
 
   @UseGuards(AuthGuard)

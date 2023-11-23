@@ -28,29 +28,12 @@ export class DocumentpdfController {
   ) {
     return this.documentpdfService.guardarPdf(file, textToReplace, res);
   }
-  //await this.documentpdfService.guardarPdf(file, textToReplace, res);
 
-  /* @UseGuards(AuthGuard)
-  @Post('upload/:textToReplace')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
-    @Param('textToReplace') textToReplace: string,
-  ) {
-    return this.documentpdfService.guardarPdf(file, textToReplace);
-  } */
   @UseGuards(AuthGuard)
   @Get('/download/:fileName')
   download(@Param('fileName') fileName: string, @Res() res: Response) {
     this.documentpdfService.downloadFile(fileName, res);
   }
-
-  /* @UseGuards(AuthGuard)
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return this.documentpdfService.guardarPdf(file);
-  } */
   @Get('/view/:fileName')
   async viewPdf(@Param('fileName') fileName: string, @Res() res: Response) {
     return this.documentpdfService.verPdf(fileName, res);
@@ -62,6 +45,11 @@ export class DocumentpdfController {
     @Res() res: Response,
   ) {
     return this.documentpdfService.verPdfByPartialName(partialName, res);
+  }
+
+  @Get('/buscarpdf/:partialName')
+  async buscarpdf(@Param('partialName') partialName: string) {
+    return this.documentpdfService.buscarpdf(partialName);
   }
 
   @UseGuards(AuthGuard)

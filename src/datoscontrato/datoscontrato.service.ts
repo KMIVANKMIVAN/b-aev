@@ -107,34 +107,46 @@ export class DatoscontratoService {
     }
   }
 
-  async findOneContCodCompleja(
-    contcod: string,
-    titrcod: string,
-    ploccod: string[],
-  ): Promise<Datoscontrato[]> {
+  async findOneContCodCompleja(contcod: string): Promise<Datoscontrato[]> {
     try {
       const sql = `
-        SELECT
-          d.*,
-          d.id AS iddesem,
-          DATE_FORMAT(d.fecha_generado, '%d/%m/%Y') AS fechagenerado,
-          DATE_FORMAT(d.fecha_banco, '%d/%m/%Y') AS fechabanco,
-          d.monto_desembolsado,
-          e.id,
-          e.etapa
-        FROM desembolsos AS d
-        INNER JOIN etapas AS e ON d.estado = e.id
-        WHERE d.estado = 6
-          AND d.cont_cod = ?
-          AND d.titr_cod = ?
-          AND d.ploc_cod IN (?);
+      SELECT 
+      *,
+      d.id AS iddesem,
+      DATE_FORMAT(d.fecha_generado, '%d/%m/%Y') AS fechagenerado,
+      DATE_FORMAT(d.fecha_banco, '%d/%m/%Y') AS fechabanco,
+      d.monto_desembolsado,
+      d.id,
+      tp.detalle,  -- Este es el campo 'detalle' que quieres obtener de 'tipoplanillas'
+      tc.titular,
+      tc.cuentatitular
+  FROM desembolsos d
+  INNER JOIN etapas e ON d.estado = e.id
+  LEFT JOIN tipoplanillas tp ON d.tipo_planilla = tp.id
+  LEFT JOIN titularcuenta tc ON d.idcuenta = tc.id  -- Uniendo con titularcuenta
+  WHERE d.estado = 6
+      AND d.cont_cod = ?
+      AND NOT ISNULL(d.fecha_banco)
+      AND ISNULL(d.archivo);
+  
       `;
+      /* const sql = `
+        SELECT 
+          *, 
+          d.id AS iddesem,
+          DATE_FORMAT(d.fecha_generado,'%d/%m/%Y') AS fechagenerado,
+          DATE_FORMAT(d.fecha_banco,'%d/%m/%Y') AS fechabanco,
+          d.monto_desembolsado,
+          d.id
+        FROM desembolsos d
+        INNER JOIN etapas e ON d.estado = e.id
+        WHERE d.estado = 6
+        AND d.cont_cod = ?
+        AND NOT ISNULL(d.fecha_banco) 
+        AND ISNULL(d.archivo);
+      `; */
 
-      const result = await this.connection.query(sql, [
-        contcod,
-        titrcod,
-        ploccod,
-      ]);
+      const result = await this.connection.query(sql, [contcod]);
       return result;
     } catch (error) {
       throw new Error('No se pudieron obtener los Datoscontrato.');

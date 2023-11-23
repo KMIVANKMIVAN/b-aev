@@ -24,15 +24,25 @@ export class DocumentpdfService {
     textToReplace: string,
     res: Response,
   ) {
+    const existeArchivo = await this.buscarpdf(textToReplace);
+
+    if (existeArchivo) {
+      res.status(404).send('Ya Se Subio el Archivo');
+      return;
+    }
     if (file) {
       if (file.mimetype !== 'application/pdf') {
-        throw new BadRequestException('El archivo no es un PDF válido');
+        // throw new BadRequestException('El archivo no es un PDF válido');
+        res.status(404).send('El archivo no es un PDF válido');
+        return;
       }
 
       if (file.size > 10 * 1024 * 1024) {
-        throw new BadRequestException(
+        /* throw new BadRequestException(
           'El archivo excede el tamaño máximo de 10MB',
-        );
+        ); */
+        res.status(404).send('El archivo excede el tamaño máximo de 10MB');
+        return;
       }
 
       const dateTime = this.obtenerFechaYHoraActual();
@@ -46,23 +56,39 @@ export class DocumentpdfService {
         fs.writeFileSync(destinationPath, file.buffer);
         console.log(`PDF guardado en: ${destinationPath}`);
 
-        // Configurar la respuesta con el archivo PDF recién guardado
-        const fileStream = fs.createReadStream(destinationPath);
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader(
-          'Content-Disposition',
-          `attachment; filename=${uniqueName}`,
-        );
-        fileStream.pipe(res); // Enviar el archivo PDF como respuesta
-
-        return { success: true, message: 'PDF guardado exitosamente' };
+        const numero = this.obtenerParteNumerica(textToReplace);
+        await this.actualizarRegistroEnBaseDeDatos(numero);
+        res.status(200).send('PDF guardado exitosamente');
       } catch (error) {
-        console.error('Error al guardar el PDF:', error);
-        throw new BadRequestException('Error al guardar el PDF');
+        res.status(404).send('Error durante la subida del archivo');
       }
     } else {
-      console.log('No se recibió ningún archivo.');
-      return { success: false, message: 'No se recibió ningún archivo' };
+      res.status(404).send('No es un PDF válido');
+    }
+  }
+
+  obtenerParteNumerica(texto: string): string {
+    const numerosEncontrados = texto.match(/\d+/); // Expresión regular para encontrar dígitos
+    if (numerosEncontrados) {
+      return numerosEncontrados[0]; // Devuelve la primera coincidencia encontrada
+    }
+    return ''; // En caso de no encontrar números, se devuelve una cadena vacía
+  }
+
+  async actualizarRegistroEnBaseDeDatos(numero: string): Promise<void> {
+    // Aquí ejecutas el UPDATE en tu base de datos utilizando el número recibido
+    try {
+      const sql = `
+        UPDATE desembolsos
+        SET archivo = '${numero}'
+        WHERE id = '${numero}';
+      `;
+
+      await this.connection.query(sql);
+    } catch (error) {
+      throw new Error(
+        'Error al ejecutar la consulta SQL para actualizar el registro',
+      );
     }
   }
 
@@ -77,11 +103,7 @@ export class DocumentpdfService {
       );
 
       if (matchingFiles.length === 0) {
-        res
-          .status(404)
-          .send(
-            'El archivo solicitado no se encontró ¿Estas seguro de que se Subio el Archivo?',
-          );
+        res.status(404).send('Error ¿Estas seguro de que se Subio el Archivo?');
         return;
       }
 
@@ -231,8 +253,33 @@ export class DocumentpdfService {
       res.status(404).send('Error al mostrar el archivo PDF');
     }
   }
+  async buscarpdf(partialName: string): Promise<boolean | string> {
+    const filesDirectory = '/home/van369/Documentos/';
+
+    try {
+      const filesInDirectory = fs.readdirSync(filesDirectory);
+
+      const matchingFile = filesInDirectory.find(
+        (file) => file.includes(partialName) && file.endsWith('.pdf'),
+      );
+
+      if (matchingFile) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.error('Error al buscar el archivo PDF:', error);
+      // throw new Error('Error al buscar el archivo PDF');
+      return 'HUBO PROBLEMAS AL BUSCAR';
+    }
+  }
 
   async eliminarPdf(textToMatch: string, res: Response): Promise<void> {
+    console.log('no hay nada');
+
+    console.log('que me esta llegando', textToMatch);
+
     const filesDirectory = '/home/van369/Documentos/';
 
     try {
@@ -244,7 +291,7 @@ export class DocumentpdfService {
 
       if (!matchingFile) {
         console.error('El archivo no se encontró');
-        res.status(404).send('El archivo no se encontró');
+        res.status(404).send('El archivo no se Encontró');
         return;
       }
 
@@ -253,10 +300,30 @@ export class DocumentpdfService {
       // Eliminar el archivo
       fs.unlinkSync(filePath);
       console.log(`PDF eliminado: ${matchingFile}`);
-      res.send('Archivo eliminado correctamente');
+      const numero = this.obtenerParteNumerica(textToMatch);
+      await this.actualizarRegistroEliminarEnBaseDeDatos(numero);
+
+      res.send('Archivo eliminado Correctamente');
     } catch (error) {
       console.error('Error al eliminar el PDF:', error);
       res.status(404).send('Error al eliminar el archivo PDF');
+    }
+  }
+
+  async actualizarRegistroEliminarEnBaseDeDatos(numero: string): Promise<void> {
+    // Aquí ejecutas el UPDATE en tu base de datos utilizando el número recibido
+    try {
+      const sql = `
+      UPDATE desembolsos
+      SET archivo = NULL
+      WHERE id = '${numero}';
+    `;
+
+      await this.connection.query(sql);
+    } catch (error) {
+      throw new Error(
+        'Error al ejecutar la consulta SQL para actualizar el registro',
+      );
     }
   }
 
@@ -271,7 +338,7 @@ export class DocumentpdfService {
           WHERE proy_cod LIKE '%${buscar}%' OR cont_des LIKE '%${buscar}%'
           ) AS resultados
           ORDER BY RAND()
-          LIMIT 10;
+          LIMIT 6;
       `;
 
       const result = await this.connection.query(sql);
