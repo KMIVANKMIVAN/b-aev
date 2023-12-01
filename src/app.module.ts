@@ -16,6 +16,8 @@ import { Desembolso } from './desembolsos/entities/desembolso.entity';
 import { Etapa } from './etapas/entities/etapa.entity';
 import { Titularcuenta } from './titularcuenta/entities/titularcuenta.entity';
 import { Devolucione } from './devoluciones/entities/devolucione.entity';
+import { RespaldoDesembolso } from './respaldo_desembolsos/entities/respaldo_desembolso.entity';
+import { TipoRespaldo } from './tipo_respaldo/entities/tipo_respaldo.entity';
 // import {  } from './';
 
 // import { HttpModule } from '@nestjs/axios';
@@ -34,6 +36,8 @@ import { DesembolsosModule } from './desembolsos/desembolsos.module';
 import { EtapasModule } from './etapas/etapas.module';
 import { TitularcuentaModule } from './titularcuenta/titularcuenta.module';
 import { DevolucionesModule } from './devoluciones/devoluciones.module';
+import { RespaldoDesembolsosModule } from './respaldo_desembolsos/respaldo_desembolsos.module';
+import { TipoRespaldoModule } from './tipo_respaldo/tipo_respaldo.module';
 
 @Module({
   imports: [
@@ -51,6 +55,8 @@ import { DevolucionesModule } from './devoluciones/devoluciones.module';
     TitularcuentaModule,
     DevolucionesModule,
     AuthModule,
+    RespaldoDesembolsosModule,
+    TipoRespaldoModule,
     /* TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
@@ -94,6 +100,8 @@ import { DevolucionesModule } from './devoluciones/devoluciones.module';
         Etapa,
         Titularcuenta,
         Devolucione,
+        RespaldoDesembolso,
+        TipoRespaldo,
       ], // Agrega aquí tus entidades
       synchronize: false, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
     }),

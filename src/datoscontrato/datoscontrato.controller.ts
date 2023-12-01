@@ -33,6 +33,11 @@ export class DatoscontratoController {
   findOneContCodCompleja(@Param('contcod') contcod: string) {
     return this.datoscontratoService.findOneContCodCompleja(contcod);
   }
+  @UseGuards(AuthGuard)
+  @Get('/compleja2/:contcod')
+  findOneContCodCompleja2(@Param('contcod') contcod: string) {
+    return this.datoscontratoService.findOneContCodCompleja2(contcod);
+  }
 
   @UseGuards(AuthGuard)
   @Get('/codigo/:codigo')

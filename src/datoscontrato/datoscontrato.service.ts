@@ -126,8 +126,7 @@ export class DatoscontratoService {
   LEFT JOIN titularcuenta tc ON d.idcuenta = tc.id  -- Uniendo con titularcuenta
   WHERE d.estado = 6
       AND d.cont_cod = ?
-      AND NOT ISNULL(d.fecha_banco)
-      AND ISNULL(d.archivo);
+      
   
       `;
       /* const sql = `
@@ -145,6 +144,36 @@ export class DatoscontratoService {
         AND NOT ISNULL(d.fecha_banco) 
         AND ISNULL(d.archivo);
       `; */
+
+      const result = await this.connection.query(sql, [contcod]);
+      return result;
+    } catch (error) {
+      throw new Error('No se pudieron obtener los Datoscontrato.');
+    }
+  }
+  async findOneContCodCompleja2(contcod: string): Promise<Datoscontrato[]> {
+    try {
+      const sql = `
+      SELECT 
+      *,
+      d.id AS iddesem,
+      DATE_FORMAT(d.fecha_generado, '%d/%m/%Y') AS fechagenerado,
+      DATE_FORMAT(d.fecha_banco, '%d/%m/%Y') AS fechabanco,
+      d.monto_desembolsado,
+      d.id,
+      tp.detalle,  -- Este es el campo 'detalle' que quieres obtener de 'tipoplanillas'
+      tc.titular,
+      tc.cuentatitular
+  FROM desembolsos d
+  INNER JOIN etapas e ON d.estado = e.id
+  LEFT JOIN tipoplanillas tp ON d.tipo_planilla = tp.id
+  LEFT JOIN titularcuenta tc ON d.idcuenta = tc.id  -- Uniendo con titularcuenta
+  WHERE d.estado = 6
+      AND d.cont_cod = ?
+      AND d.fecha_banco IS NOT NULL
+      AND d.archivo IS NOT NULL;
+  
+      `;
 
       const result = await this.connection.query(sql, [contcod]);
       return result;
