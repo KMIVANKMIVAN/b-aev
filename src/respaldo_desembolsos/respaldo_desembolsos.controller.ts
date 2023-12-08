@@ -57,6 +57,32 @@ export class RespaldoDesembolsosController {
   }
 
   @UseGuards(AuthGuard)
+  @Get('eliminardesembidarchiv/:desembolsos_id/:archivo')
+  eliminarDesembIdArchiv(
+    @Param('desembolsos_id') desembolsos_id: number,
+    @Param('archivo') archivo: string,
+  ) {
+    return this.respaldoDesembolsosService.eliminarDesembIdArchiv(
+      +desembolsos_id,
+      archivo,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('descargardesembidarchiv/:desembolsos_id/:archivo')
+  descargarDesembIdArchiv(
+    @Param('desembolsos_id') desembolsos_id: number,
+    @Param('archivo') archivo: string,
+    @Res() res: Response,
+  ) {
+    this.respaldoDesembolsosService.descargarDesembIdArchiv(
+      +desembolsos_id,
+      archivo,
+      res,
+    );
+  }
+
+  @UseGuards(AuthGuard)
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.respaldoDesembolsosService.findOne(+id);

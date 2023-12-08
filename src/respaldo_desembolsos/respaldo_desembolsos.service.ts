@@ -258,6 +258,240 @@ export class RespaldoDesembolsosService {
       );
     }
   }
+  /* async eliminarDesembIdArchiv(
+    desembolsos_id: number,
+    archivo: string,
+  ): Promise<string> {
+    try {
+      const respaldosDesembolso = await this.respaldodesembolsoRepository.query(
+        `SELECT rd.*
+         FROM respaldo_desembolsos rd
+         WHERE rd.desembolsos_id = ? AND rd.archivo = ?`,
+        [desembolsos_id, archivo],
+      );
+
+      if (!respaldosDesembolso || respaldosDesembolso.length === 0) {
+        throw new NotFoundException(
+          `No se encontraron respaldos de desembolso para el ID ${desembolsos_id} y el archivo ${archivo}`,
+        );
+      }
+
+      // Llamar a eliminarPdf con el nombre del archivo después de encontrar los respaldos
+      await this.eliminarPdf(archivo);
+
+      // Llamar a remove pasando el ID y el archivo para eliminar el registro
+      const eliminacion = await this.remove(respaldosDesembolso[0].id, archivo);
+
+      // Enviar respuesta de éxito con el mensaje de eliminación
+      return eliminacion;
+    } catch (error) {
+      // Manejar errores
+      console.error('Error al eliminar respaldo de desembolso:', error.message);
+
+      if (error instanceof NotFoundException) {
+        return 'No se encontraron respaldos para eliminar.';
+      } else {
+        return 'Hubo un problema al eliminar el respaldo de desembolso.';
+      }
+    }
+  } */
+  async eliminarDesembIdArchiv(
+    desembolsos_id: number,
+    archivo: string,
+  ): Promise<string> {
+    try {
+      const respaldosDesembolso = await this.respaldodesembolsoRepository.query(
+        `SELECT rd.*
+         FROM respaldo_desembolsos rd
+         WHERE rd.desembolsos_id = ? AND rd.archivo = ?`,
+        [desembolsos_id, archivo],
+      );
+
+      if (!respaldosDesembolso || respaldosDesembolso.length === 0) {
+        throw new NotFoundException(
+          `No se encontraron respaldos de desembolso para el ID ${desembolsos_id} y el archivo ${archivo}`,
+        );
+      }
+
+      const id = respaldosDesembolso[0].id;
+
+      const filesDirectory = '/home/van369/Documentos/';
+
+      const matchingFile = fs.readdirSync(filesDirectory).find((file) => {
+        const fileNameWithoutExtension = path.parse(file).name;
+        const filePrefix = fileNameWithoutExtension.split('-')[0];
+        const receivedPrefix = archivo.split('-')[0];
+
+        return filePrefix === receivedPrefix;
+      });
+
+      if (!matchingFile) {
+        console.error('El archivo no se encontró');
+        throw new Error('El archivo no se encontró');
+      }
+
+      const filePath = path.join(filesDirectory, matchingFile);
+      fs.unlinkSync(filePath);
+      console.log(`PDF eliminado: ${matchingFile}`);
+
+      await this.respaldodesembolsoRepository.remove(respaldosDesembolso[0]);
+
+      return `RespaldoDesembolso con ID ${id} y archivo ${archivo} eliminado correctamente`;
+    } catch (error) {
+      console.error('Error al eliminar respaldo de desembolso:', error.message);
+
+      if (error instanceof NotFoundException) {
+        return 'No se encontraron respaldos para eliminar.';
+      } else {
+        return 'Hubo un problema al eliminar el respaldo de desembolso.';
+      }
+    }
+  }
+  /* async descargarDesembIdArchiv(
+    desembolsos_id: number,
+    archivo: string,
+    res: Response,
+  ): Promise<void> {
+    try {
+      const respaldosDesembolso = await this.respaldodesembolsoRepository.query(
+        `SELECT rd.*
+         FROM respaldo_desembolsos rd
+         WHERE rd.desembolsos_id = ? AND rd.archivo = ?`,
+        [desembolsos_id, archivo],
+      );
+
+      if (!respaldosDesembolso || respaldosDesembolso.length === 0) {
+        throw new NotFoundException(
+          `No se encontraron respaldos de desembolso para el ID ${desembolsos_id} y el archivo ${archivo}`,
+        );
+      }
+
+      const nomarchivo = respaldosDesembolso[0].archivo;
+
+      const filesDirectory = '/home/van369/Documentos/';
+
+      const filesInDirectory = fs.readdirSync(filesDirectory);
+
+      const matchingFiles = filesInDirectory.filter((file) =>
+        file.includes(nomarchivo),
+      );
+
+      if (matchingFiles.length === 0) {
+        res
+          .status(404)
+          .send('Error: ¿Estás seguro de que se subió el archivo?');
+        return;
+      }
+
+      const fileToDownload = matchingFiles[0];
+      const filePath = `${filesDirectory}${fileToDownload}`;
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=${fileToDownload}`,
+      );
+
+      const fileStream = fs.createReadStream(filePath);
+
+      fileStream.pipe(res);
+
+      fileStream.on('end', () => {
+        res.end();
+      });
+
+      fileStream.on('error', (error) => {
+        console.error('Error durante la descarga del archivo:', error);
+        res.status(404).send('Error durante la descarga del archivo');
+      });
+    } catch (error) {
+      console.error(
+        'Error al descargar respaldo de desembolso:',
+        error.message,
+      );
+
+      if (error instanceof NotFoundException) {
+        res.status(404).send('No se encontraron respaldos para descargar.');
+      } else {
+        res
+          .status(404)
+          .send('Hubo un problema al descargar el respaldo de desembolso.');
+      }
+    }
+  } */
+
+  async descargarDesembIdArchiv(
+    desembolsos_id: number,
+    archivo: string,
+    res: Response,
+  ): Promise<void> {
+    try {
+      const respaldosDesembolso = await this.respaldodesembolsoRepository.query(
+        `SELECT rd.*
+         FROM respaldo_desembolsos rd
+         WHERE rd.desembolsos_id = ? AND rd.archivo = ?`,
+        [desembolsos_id, archivo],
+      );
+
+      if (!respaldosDesembolso || respaldosDesembolso.length === 0) {
+        throw new NotFoundException(
+          `No se encontraron respaldos de desembolso para el ID ${desembolsos_id} y el archivo ${archivo}`,
+        );
+      }
+
+      const nomarchivo = respaldosDesembolso[0].archivo;
+
+      const filesDirectory = '/home/van369/Documentos/';
+
+      const filesInDirectory = fs.readdirSync(filesDirectory);
+
+      const matchingFiles = filesInDirectory.filter((file) =>
+        file.includes(nomarchivo),
+      );
+
+      if (matchingFiles.length === 0) {
+        res
+          .status(404)
+          .send('Error: ¿Estás seguro de que se subió el archivo?');
+        return;
+      }
+
+      const fileToDownload = matchingFiles[0];
+      const filePath = `${filesDirectory}${fileToDownload}`;
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=${fileToDownload}`,
+      );
+
+      const fileStream = fs.createReadStream(filePath);
+
+      fileStream.pipe(res);
+
+      fileStream.on('end', () => {
+        res.end();
+      });
+
+      fileStream.on('error', (error) => {
+        console.error('Error durante la descarga del archivo:', error);
+        res.status(404).send('Error durante la descarga del archivo');
+      });
+    } catch (error) {
+      console.error(
+        'Error al descargar respaldo de desembolso:',
+        error.message,
+      );
+
+      if (error instanceof NotFoundException) {
+        res.status(404).send('No se encontraron respaldos para descargar.');
+      } else {
+        res
+          .status(404)
+          .send('Hubo un problema al descargar el respaldo de desembolso.');
+      }
+    }
+  }
 
   async findOne(id: number): Promise<RespaldoDesembolso> {
     const respaldoDesembolso = await this.respaldodesembolsoRepository.findOne({
@@ -328,9 +562,54 @@ export class RespaldoDesembolsosService {
       // Eliminar el archivo
       fs.unlinkSync(filePath);
       console.log(`PDF eliminado: ${matchingFile}`);
+
+      // Enviar respuesta de éxito
+      // Usar un mensaje diferente si se eliminó el archivo correctamente
+      return; // No es necesario devolver nada en este caso
     } catch (error) {
       console.error('Error al eliminar el PDF:', error);
       throw new Error('Error al eliminar el archivo PDF');
+    }
+  }
+  async downloadFile(fileName: string, res: Response): Promise<void> {
+    const filesDirectory = '/home/van369/Documentos/';
+
+    try {
+      const filesInDirectory = fs.readdirSync(filesDirectory);
+
+      const matchingFiles = filesInDirectory.filter((file) =>
+        file.includes(fileName),
+      );
+
+      if (matchingFiles.length === 0) {
+        res.status(404).send('Error ¿Estas seguro de que se Subio el Archivo?');
+        return;
+      }
+
+      const fileToDownload = matchingFiles[0];
+      const filePath = `${filesDirectory}${fileToDownload}`;
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=${fileToDownload}`,
+      );
+
+      const fileStream = fs.createReadStream(filePath);
+
+      fileStream.pipe(res);
+
+      fileStream.on('end', () => {
+        res.end();
+      });
+
+      fileStream.on('error', (error) => {
+        console.error('Error durante la descarga del archivo:', error);
+        res.status(404).send('Error durante la descarga del archivo');
+      });
+    } catch (error) {
+      console.error('Error durante la descarga del archivo:', error);
+      res.status(404).send('Error durante la descarga del archivo');
     }
   }
 }
