@@ -5,6 +5,11 @@ import { Connection } from 'typeorm';
 
 import { HttpService } from '@nestjs/axios';
 import * as fs from 'fs';
+// import { PDFDocument } from 'pdfjs-dist/build/pdf';
+
+// import { PDFDocument } from 'pdfjs-dist/build/pdf.mjs';
+// import { PDFDocument } from 'pdf-lib';
+// import * as PDFDocument from 'pdfkit';
 
 import { Documentpdf } from './entities/documentpdf.entity';
 import { Response } from 'express';
@@ -57,7 +62,18 @@ export class DocumentpdfService {
         console.log(`PDF guardado en: ${destinationPath}`);
 
         const numero = this.obtenerParteNumerica(textToReplace);
-        await this.actualizarRegistroEnBaseDeDatos(numero);
+        const isAEV = textToReplace.includes('-AEV');
+
+        if (isAEV) {
+          await this.actualizarRegistroEnBaseDeDatos(numero);
+          console.log('a qui aev');
+        } else {
+          console.log('a qui busa');
+          const dateTime = this.obtenerFechaYHoraActualSQL();
+          console.log('a qui busa', dateTime);
+
+          await this.actualizarRegistroEnBaseDeDatosBUSA(numero, dateTime);
+        }
         res.status(200).send('PDF guardado exitosamente');
       } catch (error) {
         res.status(404).send('Error durante la subida del archivo');
@@ -65,6 +81,17 @@ export class DocumentpdfService {
     } else {
       res.status(404).send('No es un PDF válido');
     }
+  }
+  obtenerFechaYHoraActualSQL(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = ('0' + (now.getMonth() + 1)).slice(-2);
+    const day = ('0' + now.getDate()).slice(-2);
+    const hours = ('0' + now.getHours()).slice(-2);
+    const minutes = ('0' + now.getMinutes()).slice(-2);
+    const seconds = ('0' + now.getSeconds()).slice(-2);
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   }
 
   obtenerParteNumerica(texto: string): string {
@@ -81,6 +108,26 @@ export class DocumentpdfService {
       const sql = `
         UPDATE desembolsos
         SET archivo = '${numero}'
+        WHERE id = '${numero}';
+      `;
+
+      await this.connection.query(sql);
+    } catch (error) {
+      throw new Error(
+        'Error al ejecutar la consulta SQL para actualizar el registro',
+      );
+    }
+  }
+  async actualizarRegistroEnBaseDeDatosBUSA(
+    numero: string,
+    dateTime: string,
+  ): Promise<void> {
+    // Aquí ejecutas el UPDATE en tu base de datos utilizando el número recibido
+    try {
+      const sql = `
+        UPDATE desembolsos
+        SET archivo_busa = '${numero}',
+        fecha_busa = '${dateTime}'
         WHERE id = '${numero}';
       `;
 
@@ -155,7 +202,7 @@ export class DocumentpdfService {
     const month = now.getMonth() + 1;
     const day = now.getDate();
 
-    return `${year}-${month}-${day}`;
+    return `${day}-${month}-${year}`;
   }
 
   async concatenarNombreConFechaHora(
@@ -348,6 +395,78 @@ export class DocumentpdfService {
       throw new Error(
         'No se pudieron obtener los Datoscontrato. Detalles en el registro.',
       );
+    }
+  }
+
+  /* async base64ToPdf(
+    base64String: string,
+    fileName: string,
+    res: Response,
+  ): Promise<void> {
+    try {
+      const buffer = Buffer.from(base64String, 'base64');
+      const filesDirectory = '/home/van369/Documentos/';
+      const filePath = `${filesDirectory}${fileName}.pdf`;
+
+      console.log('Ruta del archivo:', filePath); // Verifica que la ruta sea correcta
+
+      // Guardar el archivo PDF en la ruta especificada
+      fs.writeFileSync(filePath, buffer);
+
+      console.log('Archivo guardado correctamente:', filePath); // Verifica que se haya guardado correctamente
+
+      // Enviar el archivo como respuesta
+      res.setHeader('Content-Type', 'application/pdf');
+      res.download(filePath, `${fileName}.pdf`, (err) => {
+        // Eliminar el archivo después de descargarlo
+        // fs.unlinkSync(filePath);
+        if (err) {
+          console.error('Error al descargar el archivo PDF:', err);
+          throw new Error('Error al descargar el archivo PDF');
+        } else {
+          console.log('Archivo descargado con éxito');
+        }
+      });
+    } catch (error) {
+      console.error('Error al convertir Base64 a PDF:', error);
+      throw new Error('Error al convertir Base64 a PDF');
+    }
+  } */
+  async base64ToPdf(
+    base64String: string,
+    fileName: string,
+    res: Response,
+  ): Promise<void> {
+    try {
+      const buffer = Buffer.from(base64String, 'base64');
+      const filesDirectory = '/home/van369/Documentos/';
+      const dateTime = this.obtenerFechaYHoraActual();
+      const uniqueName = await this.concatenarNombreConFechaHora(
+        dateTime,
+        fileName, // Usar fileName en lugar de textToReplace
+      );
+      const destinationPath = `${filesDirectory}${uniqueName}`; // Generar la ruta con el nuevo nombre único
+
+      console.log('Ruta del archivo:', destinationPath); // Verificar la ruta del archivo
+
+      // Guardar el archivo PDF en la ruta especificada con el nuevo nombre único
+      fs.writeFileSync(destinationPath, buffer);
+
+      console.log('Archivo guardado correctamente:', destinationPath);
+
+      // Enviar el archivo como respuesta
+      res.setHeader('Content-Type', 'application/pdf');
+      res.download(destinationPath, `${uniqueName}.pdf`, (err) => {
+        if (err) {
+          console.error('Error al descargar el archivo PDF:', err);
+          throw new Error('Error al descargar el archivo PDF');
+        } else {
+          console.log('Archivo descargado con éxito');
+        }
+      });
+    } catch (error) {
+      console.error('Error al convertir Base64 a PDF:', error);
+      throw new Error('Error al convertir Base64 a PDF');
     }
   }
 }

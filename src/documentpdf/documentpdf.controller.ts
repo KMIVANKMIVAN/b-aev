@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Body,
   Param,
   Post,
   UploadedFile,
@@ -62,5 +63,14 @@ export class DocumentpdfController {
   @Get('/buscar/:buscar')
   buscarViviendaNueva(@Param('buscar') buscar: string) {
     return this.documentpdfService.buscarViviendaNueva(buscar);
+  }
+
+  @Post('/base64apdf')
+  async base64ToPdf(
+    @Body('base64String') base64String: string,
+    @Body('fileName') fileName: string,
+    @Res() res: Response,
+  ) {
+    await this.documentpdfService.base64ToPdf(base64String, fileName, res);
   }
 }

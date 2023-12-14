@@ -121,7 +121,6 @@ export class UsersService {
           SELECT * FROM users
           WHERE username LIKE '%${buscar}%' OR cedula_identidad LIKE '%${buscar}%'
           ) AS resultados
-          ORDER BY RAND()
           LIMIT 10;
       `;
 

@@ -18,11 +18,17 @@ import { Titularcuenta } from './titularcuenta/entities/titularcuenta.entity';
 import { Devolucione } from './devoluciones/entities/devolucione.entity';
 import { RespaldoDesembolso } from './respaldo_desembolsos/entities/respaldo_desembolso.entity';
 import { TipoRespaldo } from './tipo_respaldo/entities/tipo_respaldo.entity';
+//////cuadro
+import { Proyectosexcel } from './proyectosexcel/entities/proyectosexcel.entity';
+import { Departamento } from './departamentos/entities/departamento.entity';
+import { Estado } from './estados/entities/estado.entity';
+import { TbActividade } from './tb_actividades/entities/tb_actividade.entity';
+import { Tipo } from './tipo/entities/tipo.entity';
+import { Modalidade } from './modalidades/entities/modalidade.entity';
+import { Fiscale } from './fiscales/entities/fiscale.entity';
+import { Estructuracosto } from './estructuracostos/entities/estructuracosto.entity';
 // import {  } from './';
 
-// import { HttpModule } from '@nestjs/axios';
-
-// import { MulterModule } from '@nestjs/platform-express';
 import { UsersModule } from './users/users.module';
 import { RolesUsersModule } from './roles_users/roles_users.module';
 import { AuthModule } from './auth/auth.module';
@@ -38,6 +44,15 @@ import { TitularcuentaModule } from './titularcuenta/titularcuenta.module';
 import { DevolucionesModule } from './devoluciones/devoluciones.module';
 import { RespaldoDesembolsosModule } from './respaldo_desembolsos/respaldo_desembolsos.module';
 import { TipoRespaldoModule } from './tipo_respaldo/tipo_respaldo.module';
+//////cuadro
+import { ProyectosexcelModule } from './proyectosexcel/proyectosexcel.module';
+import { DepartamentosModule } from './departamentos/departamentos.module';
+import { EstadosModule } from './estados/estados.module';
+import { TbActividadesModule } from './tb_actividades/tb_actividades.module';
+import { TipoModule } from './tipo/tipo.module';
+import { ModalidadesModule } from './modalidades/modalidades.module';
+import { FiscalesModule } from './fiscales/fiscales.module';
+import { EstructuracostosModule } from './estructuracostos/estructuracostos.module';
 
 @Module({
   imports: [
@@ -102,6 +117,33 @@ import { TipoRespaldoModule } from './tipo_respaldo/tipo_respaldo.module';
         Devolucione,
         RespaldoDesembolso,
         TipoRespaldo,
+      ], // Agrega aquí tus entidades
+      synchronize: false, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
+    }),
+    ProyectosexcelModule,
+    DepartamentosModule,
+    EstadosModule,
+    TbActividadesModule,
+    TipoModule,
+    ModalidadesModule,
+    FiscalesModule,
+    EstructuracostosModule,
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: '10.10.1.9',
+      port: 3306,
+      username: 'root',
+      password: '43vivienda',
+      database: 'cuadro',
+      entities: [
+        Proyectosexcel,
+        Departamento,
+        Estado,
+        TbActividade,
+        Tipo,
+        Modalidade,
+        Fiscale,
+        Estructuracosto,
       ], // Agrega aquí tus entidades
       synchronize: false, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
     }),
