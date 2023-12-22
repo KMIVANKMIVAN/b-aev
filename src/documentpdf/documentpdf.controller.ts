@@ -73,4 +73,12 @@ export class DocumentpdfController {
   ) {
     await this.documentpdfService.base64ToPdf(base64String, fileName, res);
   }
+  @Get('enviarbanco/:numero')
+  enviarBanco(@Param('numero') numero: string) {
+    return this.documentpdfService.enviarBanco(numero);
+  }
+  @Get('verificarenviobanco/:numero')
+  verificarEnvioBanco(@Param('numero') numero: string) {
+    return this.documentpdfService.verificarEnvioBanco(numero);
+  }
 }

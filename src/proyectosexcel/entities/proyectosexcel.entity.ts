@@ -332,7 +332,12 @@ export class Proyectosexcel {
 
   @Column({ type: 'date', nullable: true })
   fecha_eje1_sup: Date | null;
-
+  //
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  informe_eje1_sup: string;
+  @Column({ type: 'date', nullable: true })
+  fecha_informe_eje1_sup: Date | null;
+  //
   @Column({ type: 'double', precision: 22, scale: 2, nullable: true })
   ejecutado_planilla2_sup: number | null;
 
@@ -455,10 +460,10 @@ export class Proyectosexcel {
 
   @Column({ type: 'date', nullable: true })
   prog_eval_beneficiario: Date | null;
-  //
+  //ojo
   @Column({ type: 'date', nullable: true })
   reprog_eval_beneficiarios: Date | null;
-  //
+  //ojo
   @Column({ type: 'date', nullable: true })
   prog_comite_aprobacion: Date | null;
 

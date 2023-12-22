@@ -53,6 +53,7 @@ import { TipoModule } from './tipo/tipo.module';
 import { ModalidadesModule } from './modalidades/modalidades.module';
 import { FiscalesModule } from './fiscales/fiscales.module';
 import { EstructuracostosModule } from './estructuracostos/estructuracostos.module';
+import { CuadroModule } from './cuadro/cuadro.module';
 
 @Module({
   imports: [
@@ -72,6 +73,15 @@ import { EstructuracostosModule } from './estructuracostos/estructuracostos.modu
     AuthModule,
     RespaldoDesembolsosModule,
     TipoRespaldoModule,
+
+    ProyectosexcelModule,
+    DepartamentosModule,
+    EstadosModule,
+    TbActividadesModule,
+    TipoModule,
+    ModalidadesModule,
+    FiscalesModule,
+    EstructuracostosModule,
     /* TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
@@ -96,12 +106,7 @@ import { EstructuracostosModule } from './estructuracostos/estructuracostos.modu
       synchronize: false, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
     }), */
     TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: '10.10.1.9',
-      port: 3306,
-      username: 'root',
-      password: '43vivienda',
-      database: 'sipago',
+      logging: true,
       entities: [
         User,
         RolesUser,
@@ -117,18 +122,42 @@ import { EstructuracostosModule } from './estructuracostos/estructuracostos.modu
         Devolucione,
         RespaldoDesembolso,
         TipoRespaldo,
-      ], // Agrega aquí tus entidades
-      synchronize: false, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
+      ],
+      synchronize: false,
+      multipleStatements: true,
+      name: 'default',
+      type: 'mysql',
+      host: '10.10.1.9',
+      port: 3306,
+      username: 'root',
+      password: '43vivienda',
+      database: 'sipago',
     }),
-    ProyectosexcelModule,
-    DepartamentosModule,
-    EstadosModule,
-    TbActividadesModule,
-    TipoModule,
-    ModalidadesModule,
-    FiscalesModule,
-    EstructuracostosModule,
     TypeOrmModule.forRoot({
+      logging: true,
+      entities: [
+        Proyectosexcel,
+        Departamento,
+        Estado,
+        TbActividade,
+        Tipo,
+        Modalidade,
+        Fiscale,
+        Estructuracosto,
+      ],
+      synchronize: false,
+      multipleStatements: true,
+      name: 'cuadroConnection',
+      type: 'mysql',
+      host: '10.10.1.9',
+      port: 3306,
+      username: 'root',
+      password: '43vivienda',
+      database: 'cuadro',
+    }),
+    CuadroModule,
+
+    /* TypeOrmModule.forRoot({
       type: 'mysql',
       host: '10.10.1.9',
       port: 3306,
@@ -146,7 +175,7 @@ import { EstructuracostosModule } from './estructuracostos/estructuracostos.modu
         Estructuracosto,
       ], // Agrega aquí tus entidades
       synchronize: false, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
-    }),
+    }), */
   ],
   controllers: [AppController],
   providers: [AppService],

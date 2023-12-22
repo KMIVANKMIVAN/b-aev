@@ -72,7 +72,7 @@ export class DocumentpdfService {
           const dateTime = this.obtenerFechaYHoraActualSQL();
           console.log('a qui busa', dateTime);
 
-          await this.actualizarRegistroEnBaseDeDatosBUSA(numero, dateTime);
+          await this.actualizarRegistroEnBaseDeDatosBUSA(numero);
         }
         res.status(200).send('PDF guardado exitosamente');
       } catch (error) {
@@ -120,14 +120,19 @@ export class DocumentpdfService {
   }
   async actualizarRegistroEnBaseDeDatosBUSA(
     numero: string,
-    dateTime: string,
+    // dateTime: string,
   ): Promise<void> {
     // Aquí ejecutas el UPDATE en tu base de datos utilizando el número recibido
     try {
-      const sql = `
+      /* const sql = `
         UPDATE desembolsos
         SET archivo_busa = '${numero}',
         fecha_busa = '${dateTime}'
+        WHERE id = '${numero}';
+      `; */
+      const sql = `
+        UPDATE desembolsos
+        SET archivo_busa = '${numero}'
         WHERE id = '${numero}';
       `;
 
@@ -323,13 +328,8 @@ export class DocumentpdfService {
   }
 
   async eliminarPdf(textToMatch: string, res: Response): Promise<void> {
-    console.log('no hay nada');
-
-    console.log('que me esta llegando', textToMatch);
-
-    const filesDirectory = '/home/van369/Documentos/';
-
     try {
+      const filesDirectory = '/home/van369/Documentos/';
       const filesInDirectory = fs.readdirSync(filesDirectory);
 
       const matchingFile = filesInDirectory.find((file) =>
@@ -338,7 +338,7 @@ export class DocumentpdfService {
 
       if (!matchingFile) {
         console.error('El archivo no se encontró');
-        res.status(404).send('El archivo no se Encontró');
+        res.status(404).send('El archivo no se encontró');
         return;
       }
 
@@ -347,24 +347,49 @@ export class DocumentpdfService {
       // Eliminar el archivo
       fs.unlinkSync(filePath);
       console.log(`PDF eliminado: ${matchingFile}`);
-      const numero = this.obtenerParteNumerica(textToMatch);
-      await this.actualizarRegistroEliminarEnBaseDeDatos(numero);
 
-      res.send('Archivo eliminado Correctamente');
+      const numero = this.obtenerParteNumerica(textToMatch);
+
+      if (textToMatch.includes('-AEV')) {
+        await this.actualizarRegistroEliminarEnBaseDeDatos(numero, 'archivo');
+      } else if (textToMatch.includes('-BUSA')) {
+        await this.actualizarRegistroEliminarEnBaseDeDatos(
+          numero,
+          'archivo_busa',
+        );
+      }
+
+      res.send('Archivo eliminado correctamente');
     } catch (error) {
       console.error('Error al eliminar el PDF:', error);
       res.status(404).send('Error al eliminar el archivo PDF');
     }
   }
 
-  async actualizarRegistroEliminarEnBaseDeDatos(numero: string): Promise<void> {
-    // Aquí ejecutas el UPDATE en tu base de datos utilizando el número recibido
+  async actualizarRegistroEliminarEnBaseDeDatos(
+    numero: string,
+    campo: string,
+  ): Promise<void> {
+    const isnum = this.obtenerParteNumerica(numero);
     try {
-      const sql = `
-      UPDATE desembolsos
-      SET archivo = NULL
-      WHERE id = '${numero}';
-    `;
+      let sql = '';
+      if (campo === 'archivo') {
+        console.log('entro a aev');
+
+        sql = `
+          UPDATE desembolsos
+          SET archivo = NULL
+          WHERE id = '${isnum}';
+        `;
+      } else if (campo === 'archivo_busa') {
+        console.log('entro a busa');
+
+        sql = `
+          UPDATE desembolsos
+          SET archivo_busa = NULL
+          WHERE id = '${isnum}';
+        `;
+      }
 
       await this.connection.query(sql);
     } catch (error) {
@@ -384,8 +409,7 @@ export class DocumentpdfService {
           SELECT * FROM contratosigepro
           WHERE proy_cod LIKE '%${buscar}%' OR cont_des LIKE '%${buscar}%'
           ) AS resultados
-          ORDER BY RAND()
-          LIMIT 6;
+          LIMIT 4;
       `;
 
       const result = await this.connection.query(sql);
@@ -438,35 +462,168 @@ export class DocumentpdfService {
     res: Response,
   ): Promise<void> {
     try {
-      const buffer = Buffer.from(base64String, 'base64');
-      const filesDirectory = '/home/van369/Documentos/';
-      const dateTime = this.obtenerFechaYHoraActual();
-      const uniqueName = await this.concatenarNombreConFechaHora(
-        dateTime,
-        fileName, // Usar fileName en lugar de textToReplace
-      );
-      const destinationPath = `${filesDirectory}${uniqueName}`; // Generar la ruta con el nuevo nombre único
+      if (!this.verificarEnvioBanco(fileName)) {
+        res.status(404).send('El archivo ya fue enviado al banco');
+      }
+      const existeArchivo = await this.buscarpdf(fileName);
 
-      console.log('Ruta del archivo:', destinationPath); // Verificar la ruta del archivo
+      if (existeArchivo) {
+        res.status(404).send('Ya Se Subio el Archivo');
+        return;
+      }
 
-      // Guardar el archivo PDF en la ruta especificada con el nuevo nombre único
-      fs.writeFileSync(destinationPath, buffer);
+      try {
+        const buffer = Buffer.from(base64String, 'base64');
+        const filesDirectory = '/home/van369/Documentos/';
+        const dateTime = this.obtenerFechaYHoraActual();
+        const uniqueName = await this.concatenarNombreConFechaHora(
+          dateTime,
+          fileName, // Usar fileName en lugar de textToReplace
+        );
+        const destinationPath = `${filesDirectory}${uniqueName}`; // Generar la ruta con el nuevo nombre único
 
-      console.log('Archivo guardado correctamente:', destinationPath);
+        console.log('Ruta del archivo:', destinationPath); // Verificar la ruta del archivo
+        // Guardar el archivo PDF en la ruta especificada con el nuevo nombre único
+        fs.writeFileSync(destinationPath, buffer);
 
-      // Enviar el archivo como respuesta
-      res.setHeader('Content-Type', 'application/pdf');
-      res.download(destinationPath, `${uniqueName}.pdf`, (err) => {
-        if (err) {
-          console.error('Error al descargar el archivo PDF:', err);
-          throw new Error('Error al descargar el archivo PDF');
+        console.log('Archivo guardado correctamente:', destinationPath);
+
+        // Enviar el archivo como respuesta
+        /* res.setHeader('Content-Type', 'application/pdf');
+        res.download(destinationPath, `${uniqueName}.pdf`, (err) => {
+          if (err) {
+            console.error(
+              'Error al guardar el archivo PDF en el servidor:',
+              err,
+            );
+            throw new Error('Error al guardar el archivo PDF en el servidor');
+          } else {
+            console.log('Archivo descargado con éxito');
+          }
+        }); */
+
+        console.log(`PDF guardado en: ${destinationPath}`);
+
+        const numero = this.obtenerParteNumerica(fileName);
+        const isAEV = fileName.includes('-AEV');
+
+        if (isAEV) {
+          await this.actualizarRegistroEnBaseDeDatos(numero);
+          console.log('a qui aev');
         } else {
-          console.log('Archivo descargado con éxito');
+          await this.actualizarRegistroEnBaseDeDatosBUSA(numero);
         }
-      });
+        res.status(200).send('PDF guardado exitosamente');
+      } catch (error) {
+        res.status(404).send('Error durante la subida del archivo try 0');
+      }
     } catch (error) {
       console.error('Error al convertir Base64 a PDF:', error);
-      throw new Error('Error al convertir Base64 a PDF');
+      // throw new Error('Error al convertir Base64 a PDF');
+      res.status(404).send('Error durante la subida del archivo try');
+    }
+  }
+
+  /* async enviarBanco(numero: string): Promise<string> {
+    try {
+      const buscarpdf = await this.buscarpdf(numero);
+      const seEnvioBanco = await this.verificarEnvioBanco(numero);
+
+      if (numero.includes('-AEV')) {
+        if (buscarpdf) {
+          if (!seEnvioBanco) {
+            const sql = `
+              UPDATE desembolsos
+              SET fecha_banco = '${this.obtenerFechaYHoraActualSQL()}'
+              WHERE id = '${numero}';
+            `;
+            await this.connection.query(sql);
+            return 'Se envió al BANCO';
+          }
+          return 'Ya se envió al BANCO';
+        }
+        return 'No se ha subido el Instrucitvo y/o Anexos';
+      } else if (numero.includes('-BUSA')) {
+        if (buscarpdf) {
+          if (!seEnvioBanco) {
+            const sql = `
+            UPDATE desembolsos
+            SET fecha_busa = '${this.obtenerFechaYHoraActualSQL()}'
+            WHERE id = '${numero}';
+          `;
+            await this.connection.query(sql);
+            return 'Se envió a la AEV';
+          }
+          return 'Ya se envió al BANCO';
+        }
+        return 'No se ha subido el Instrucitvo y/o Anexos';
+      } else {
+        throw new Error('Número no tiene el formato adecuado');
+      }
+    } catch (error) {
+      throw new Error(
+        'Error al ejecutar la consulta SQL para actualizar el registro',
+      );
+    }
+  } */
+  async enviarBanco(numero: string): Promise<string> {
+    try {
+      const buscarpdf = await this.buscarpdf(numero);
+      const seEnvioBanco = await this.verificarEnvioBanco(numero);
+      let columnaFecha = '';
+      let mensajeExito = '';
+
+      if (numero.includes('-AEV')) {
+        columnaFecha = 'fecha_banco';
+        mensajeExito = 'Se envió al BANCO';
+      } else if (numero.includes('-BUSA')) {
+        columnaFecha = 'fecha_busa';
+        mensajeExito = 'Se envió a la AEV';
+      } else {
+        throw new Error('Número no tiene el formato adecuado');
+      }
+
+      if (!buscarpdf) {
+        return 'No se ha subido el Instrucitvo y/o Anexos';
+      }
+
+      if (seEnvioBanco) {
+        return 'Ya se envió al BANCO y/o AEV';
+      }
+
+      const sql = `
+        UPDATE desembolsos
+        SET ${columnaFecha} = '${this.obtenerFechaYHoraActualSQL()}'
+        WHERE id = '${numero}';
+      `;
+
+      await this.connection.query(sql);
+      return mensajeExito;
+    } catch (error) {
+      throw new Error(
+        'Error al ejecutar la consulta SQL para actualizar el registro',
+      );
+    }
+  }
+
+  async verificarEnvioBanco(numero: string): Promise<boolean> {
+    try {
+      const idnum = this.obtenerParteNumerica(numero);
+      if (numero.includes('-AEV')) {
+        const sql = `SELECT d.fecha_banco FROM desembolsos d WHERE d.id = '${idnum}'`;
+        const result = await this.connection.query(sql);
+        return result[0].fecha_banco !== null;
+      } else if (numero.includes('-BUSA')) {
+        const sql = `SELECT d.fecha_busa FROM desembolsos d WHERE d.id = '${idnum}'`;
+        const result = await this.connection.query(sql);
+        return result[0].fecha_busa !== null;
+      } else {
+        throw new Error('Número no tiene el formato adecuado');
+      }
+    } catch (error) {
+      throw new Error(
+        'Error al ejecutar la consulta SQL para obtener los datos',
+      );
     }
   }
 }
