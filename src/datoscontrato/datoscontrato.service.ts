@@ -107,7 +107,82 @@ export class DatoscontratoService {
     }
   }
 
-  async findOneContCodCompleja(contcod: string): Promise<Datoscontrato[]> {
+  async findOneContCodCompleja(contcod: string): Promise<any> {
+    try {
+      const datosContCod = await this.findOneContCod(contcod);
+
+      if (datosContCod !== null && datosContCod !== undefined) {
+        const sql = `
+          SELECT 
+          *,
+          d.id AS iddesem,
+          DATE_FORMAT(d.fecha_generado, '%d/%m/%Y') AS fechagenerado,
+          DATE_FORMAT(d.fecha_banco, '%d/%m/%Y') AS fechabanco,
+          d.monto_desembolsado,
+          d.id,
+          tp.detalle,
+          tc.titular,
+          tc.cuentatitular
+          FROM desembolsos d
+          INNER JOIN etapas e ON d.estado = e.id
+          LEFT JOIN tipoplanillas tp ON d.tipo_planilla = tp.id
+          LEFT JOIN titularcuenta tc ON d.idcuenta = tc.id  -- Uniendo con titularcuenta
+          WHERE d.estado = 6
+          AND d.cont_cod = ?
+        `;
+
+        const result = await this.connection.query(sql, [contcod]);
+
+        // Obtener los ids necesarios para AEV y BUSA
+        const ids = result.map((data: any) => data.id); // Asumiendo que 'id' es el campo que contiene el ID necesario
+
+        // Verificar envío para AEV y BUSA
+        const buttonAEVResponses = await Promise.all(
+          ids.map((id: string) => this.verificarEnvioBanco(`${id}-AEV`)),
+        );
+        const buttonBUSAResponses = await Promise.all(
+          ids.map((id: string) => this.verificarEnvioBanco(`${id}-BUSA`)),
+        );
+
+        // Asignar valores a buttonAEV y buttonBUSA según las respuestas
+        const resultWithButtons = result.map((data: any, index: number) => {
+          return {
+            ...data,
+            buttonAEV: buttonAEVResponses[index],
+            buttonBUSA: buttonBUSAResponses[index],
+          };
+        });
+
+        return resultWithButtons;
+      } else {
+        return null; // Si no se encontraron datos en findOneContCod, devuelve null
+      }
+    } catch (error) {
+      throw new Error('No se pudieron obtener los Datoscontrato.');
+    }
+  }
+  async verificarEnvioBanco(numero: string): Promise<boolean> {
+    try {
+      // const idnum = this.obtenerParteNumerica(numero);
+      const idnum = numero;
+      if (numero.includes('-AEV')) {
+        const sql = `SELECT d.fecha_banco FROM desembolsos d WHERE d.id = '${idnum}'`;
+        const result = await this.connection.query(sql);
+        return result[0].fecha_banco !== null;
+      } else if (numero.includes('-BUSA')) {
+        const sql = `SELECT d.fecha_busa FROM desembolsos d WHERE d.id = '${idnum}'`;
+        const result = await this.connection.query(sql);
+        return result[0].fecha_busa !== null;
+      } else {
+        throw new Error('Número no tiene el formato adecuado');
+      }
+    } catch (error) {
+      throw new Error(
+        'Error al ejecutar la consulta SQL para obtener los datos',
+      );
+    }
+  }
+  /* async findOneContCodCompleja(contcod: string): Promise<Datoscontrato[]> {
     try {
       const datosContCod = await this.findOneContCod(contcod);
 
@@ -139,7 +214,7 @@ export class DatoscontratoService {
     } catch (error) {
       throw new Error('No se pudieron obtener los Datoscontrato.');
     }
-  }
+  } */
   async findOneContCodCompleja2(contcod: string): Promise<Datoscontrato[]> {
     try {
       const sql = `
