@@ -15,6 +15,8 @@ import { Documentpdf } from './entities/documentpdf.entity';
 import { Response } from 'express';
 import * as path from 'path';
 
+import { ConfigService } from '@nestjs/config';
+
 @Injectable()
 export class DocumentpdfService {
   constructor(
@@ -22,7 +24,11 @@ export class DocumentpdfService {
     private readonly documentpdfRepository: Repository<Documentpdf>,
     private connection: Connection,
     private httpService: HttpService,
+
+    private configService: ConfigService,
   ) {}
+
+  namePc = this.configService.get<string>('NAMEPC');
 
   async guardarPdf(
     file: Express.Multer.File,
@@ -55,7 +61,7 @@ export class DocumentpdfService {
         dateTime,
         textToReplace,
       );
-      const destinationPath = `/home/van369/Documentos/${uniqueName}`;
+      const destinationPath = `/home/${this.namePc}/Documentos/${uniqueName}`;
 
       try {
         fs.writeFileSync(destinationPath, file.buffer);
@@ -145,8 +151,8 @@ export class DocumentpdfService {
   }
 
   async downloadFile(fileName: string, res: Response): Promise<void> {
-    const filesDirectory = '/home/van369/Documentos/';
-
+    const filesDirectory = `/home/${this.namePc}/Documentos/`;
+    console.log('Valor de namePc:', this.namePc);
     try {
       const filesInDirectory = fs.readdirSync(filesDirectory);
 
@@ -217,7 +223,9 @@ export class DocumentpdfService {
     let suffix = 0;
     let uniqueName = `${textToReplace}-${dateTime}.pdf`;
 
-    while (await this.fileExists(`/home/van369/Documentos/${uniqueName}`)) {
+    while (
+      await this.fileExists(`/home/${this.namePc}/Documentos/${uniqueName}`)
+    ) {
       suffix++;
       uniqueName = `${textToReplace}-${dateTime}(${suffix}).pdf`;
     }
@@ -226,7 +234,7 @@ export class DocumentpdfService {
   }
 
   async verPdf(fileName: string, res: Response): Promise<void> {
-    const filesDirectory = '/home/van369/Documentos/';
+    const filesDirectory = `/home/${this.namePc}/Documentos/`;
 
     try {
       const filesInDirectory = fs.readdirSync(filesDirectory);
@@ -268,7 +276,7 @@ export class DocumentpdfService {
   }
 
   async verPdfByPartialName(partialName: string, res: Response): Promise<void> {
-    const filesDirectory = '/home/van369/Documentos/';
+    const filesDirectory = `/home/${this.namePc}/Documentos/`;
 
     try {
       const filesInDirectory = fs.readdirSync(filesDirectory);
@@ -306,7 +314,7 @@ export class DocumentpdfService {
     }
   }
   async buscarpdf(partialName: string): Promise<boolean | string> {
-    const filesDirectory = '/home/van369/Documentos/';
+    const filesDirectory = `/home/${this.namePc}/Documentos/`;
 
     try {
       const filesInDirectory = fs.readdirSync(filesDirectory);
@@ -329,7 +337,7 @@ export class DocumentpdfService {
 
   async eliminarPdf(textToMatch: string, res: Response): Promise<void> {
     try {
-      const filesDirectory = '/home/van369/Documentos/';
+      const filesDirectory = `/home/${this.namePc}/Documentos/`;
       const filesInDirectory = fs.readdirSync(filesDirectory);
 
       const matchingFile = filesInDirectory.find((file) =>
@@ -474,7 +482,7 @@ export class DocumentpdfService {
 
       try {
         const buffer = Buffer.from(base64String, 'base64');
-        const filesDirectory = '/home/van369/Documentos/';
+        const filesDirectory = `/home/${this.namePc}/Documentos/`;
         const dateTime = this.obtenerFechaYHoraActual();
         const uniqueName = await this.concatenarNombreConFechaHora(
           dateTime,

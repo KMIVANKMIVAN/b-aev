@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
+import { ConfigModule } from '@nestjs/config';
+
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { User } from './users/entities/user.entity';
@@ -57,6 +59,15 @@ import { CuadroModule } from './cuadro/cuadro.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      // Esto cargará y analizará un archivo .env desde la ubicación predeterminada
+      // (el directorio raíz del proyecto)
+      // fusionará pares clave/valor del archivo .env con variables de entorno asignadas process.env
+      // y almacenará el resultado en una estructura privada accesible a través de ConfigService.
+      // Este método también registra el proveedor ConfigService.
+      isGlobal: true, // Esto permite que ConfigService sea global y esté disponible en toda la aplicación
+    }),
+
     UsersModule,
     RolesUsersModule,
     ContratosigeproModule,
@@ -127,6 +138,57 @@ import { CuadroModule } from './cuadro/cuadro.module';
       multipleStatements: true,
       name: 'default',
       type: 'mysql',
+      host: 'localhost',
+      port: 3306,
+      username: 'root',
+      password: '',
+      database: 'sipago',
+    }),
+    TypeOrmModule.forRoot({
+      logging: true,
+      entities: [
+        Proyectosexcel,
+        Departamento,
+        Estado,
+        TbActividade,
+        Tipo,
+        Modalidade,
+        Fiscale,
+        Estructuracosto,
+      ],
+      synchronize: false,
+      multipleStatements: true,
+      name: 'cuadroConnection',
+      type: 'mysql',
+      host: 'localhost',
+      port: 3306,
+      username: 'root',
+      password: '',
+      database: 'cuadro',
+    }),
+    CuadroModule,
+    /* TypeOrmModule.forRoot({
+      logging: true,
+      entities: [
+        User,
+        RolesUser,
+        Contratosigepro,
+        Datoscontrato,
+        Planillasporcontrato,
+        Planillasigepro,
+        Planillascierresaldo,
+        Documentpdf,
+        Desembolso,
+        Etapa,
+        Titularcuenta,
+        Devolucione,
+        RespaldoDesembolso,
+        TipoRespaldo,
+      ],
+      synchronize: false,
+      multipleStatements: true,
+      name: 'default',
+      type: 'mysql',
       host: '10.10.1.9',
       port: 3306,
       username: 'root',
@@ -155,27 +217,7 @@ import { CuadroModule } from './cuadro/cuadro.module';
       password: '43vivienda',
       database: 'cuadro',
     }),
-    CuadroModule,
-
-    /* TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: '10.10.1.9',
-      port: 3306,
-      username: 'root',
-      password: '43vivienda',
-      database: 'cuadro',
-      entities: [
-        Proyectosexcel,
-        Departamento,
-        Estado,
-        TbActividade,
-        Tipo,
-        Modalidade,
-        Fiscale,
-        Estructuracosto,
-      ], // Agrega aquí tus entidades
-      synchronize: false, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
-    }), */
+    CuadroModule, */
   ],
   controllers: [AppController],
   providers: [AppService],
