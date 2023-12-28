@@ -64,7 +64,11 @@ export class UsersController {
   resetPassword(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.resetPassword(+id, updateUserDto);
   }
-
+  @UseGuards(AuthGuard)
+  @Patch('resetearpassworddefecto/:id')
+  resetearPasswordDefecto(@Param('id') id: string) {
+    return this.usersService.resetearPasswordDefecto(+id);
+  }
   @UseGuards(AuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {

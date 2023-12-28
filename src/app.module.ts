@@ -21,14 +21,7 @@ import { Devolucione } from './devoluciones/entities/devolucione.entity';
 import { RespaldoDesembolso } from './respaldo_desembolsos/entities/respaldo_desembolso.entity';
 import { TipoRespaldo } from './tipo_respaldo/entities/tipo_respaldo.entity';
 //////cuadro
-import { Proyectosexcel } from './proyectosexcel/entities/proyectosexcel.entity';
-import { Departamento } from './departamentos/entities/departamento.entity';
-import { Estado } from './estados/entities/estado.entity';
-import { TbActividade } from './tb_actividades/entities/tb_actividade.entity';
-import { Tipo } from './tipo/entities/tipo.entity';
-import { Modalidade } from './modalidades/entities/modalidade.entity';
-import { Fiscale } from './fiscales/entities/fiscale.entity';
-import { Estructuracosto } from './estructuracostos/entities/estructuracosto.entity';
+
 // import {  } from './';
 
 import { UsersModule } from './users/users.module';
@@ -47,14 +40,7 @@ import { DevolucionesModule } from './devoluciones/devoluciones.module';
 import { RespaldoDesembolsosModule } from './respaldo_desembolsos/respaldo_desembolsos.module';
 import { TipoRespaldoModule } from './tipo_respaldo/tipo_respaldo.module';
 //////cuadro
-import { ProyectosexcelModule } from './proyectosexcel/proyectosexcel.module';
-import { DepartamentosModule } from './departamentos/departamentos.module';
-import { EstadosModule } from './estados/estados.module';
-import { TbActividadesModule } from './tb_actividades/tb_actividades.module';
-import { TipoModule } from './tipo/tipo.module';
-import { ModalidadesModule } from './modalidades/modalidades.module';
-import { FiscalesModule } from './fiscales/fiscales.module';
-import { EstructuracostosModule } from './estructuracostos/estructuracostos.module';
+
 import { CuadroModule } from './cuadro/cuadro.module';
 
 @Module({
@@ -85,14 +71,6 @@ import { CuadroModule } from './cuadro/cuadro.module';
     RespaldoDesembolsosModule,
     TipoRespaldoModule,
 
-    ProyectosexcelModule,
-    DepartamentosModule,
-    EstadosModule,
-    TbActividadesModule,
-    TipoModule,
-    ModalidadesModule,
-    FiscalesModule,
-    EstructuracostosModule,
     /* TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
@@ -197,16 +175,7 @@ import { CuadroModule } from './cuadro/cuadro.module';
     }),
     TypeOrmModule.forRoot({
       logging: true,
-      entities: [
-        Proyectosexcel,
-        Departamento,
-        Estado,
-        TbActividade,
-        Tipo,
-        Modalidade,
-        Fiscale,
-        Estructuracosto,
-      ],
+      entities: [],
       synchronize: false,
       multipleStatements: true,
       name: 'cuadroConnection',

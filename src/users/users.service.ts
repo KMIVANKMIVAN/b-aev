@@ -217,7 +217,28 @@ export class UsersService {
       );
     }
   }
+  async resetearPasswordDefecto(id: number): Promise<User | undefined> {
+    try {
+      const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30';
+      const defaultPassword = '708090'; // Contraseña por defecto a establecer
 
+      const sha256Hash = crypto.createHmac('sha256', secretKey);
+      sha256Hash.update(defaultPassword);
+      const hashedData = sha256Hash.digest('hex');
+
+      const updateData: Partial<User> = {
+        prioridad: 0,
+        password: hashedData,
+      };
+
+      await this.userRepository.update(id, updateData);
+      return this.findOne(id);
+    } catch (error) {
+      throw new Error(
+        `No se pudo actualizar el usuario. Usuario con ID ${id} no encontrado`,
+      );
+    }
+  }
   async remove(id: number): Promise<void> {
     try {
       await this.userRepository.delete(id);
