@@ -1,7 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotFoundException } from '@nestjs/common';
 import { Connection } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -20,10 +24,45 @@ export class UsersService {
     private connection: Connection,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(nivel: number, createUserDto: CreateUserDto): Promise<User> {
     try {
-      console.log(createUserDto.expedido);
-
+      if (nivel != 1) {
+        throw new UnauthorizedException({
+          statusCode: 401,
+          error: `El Usuario ${createUserDto.username} no Puede ser Creado, USTED NO ES UN ADMINISTRADOR`,
+          message: `El Usuario ${createUserDto.username} no Puede ser Creado, USTED NO ESTA AUTORIZADO`,
+        });
+      }
+      const userExists = await this.userRepository.findOne({
+        where: { username: createUserDto.username },
+      });
+      if (userExists) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El Usuario con nombre ${createUserDto.username} YA EXISTE`,
+          message: `El Usuario con nombre ${createUserDto.username} YA FUE REGISTRADO`,
+        });
+      }
+      const userCorreoExists = await this.userRepository.findOne({
+        where: { email: createUserDto.email },
+      });
+      if (userCorreoExists) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El Usuario con correo ${createUserDto.email} YA EXISTE`,
+          message: `El Usuario con correo ${createUserDto.email} YA FUE REGISTRADO`,
+        });
+      }
+      const userCedulaIdentidadExists = await this.userRepository.findOne({
+        where: { cedulaIdentidad: createUserDto.cedulaIdentidad },
+      });
+      if (userCedulaIdentidadExists) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El Usuario con carnet ${createUserDto.cedulaIdentidad} YA EXISTE`,
+          message: `El Usuario con carnet ${createUserDto.cedulaIdentidad} YA FUE REGISTRADO`,
+        });
+      }
       const getTodayDate = () => {
         const today = new Date();
         const year = today.getFullYear();
@@ -79,10 +118,24 @@ export class UsersService {
       await this.rolesUsersService.create(createRolesUserDto);
 
       return savedUser;
-
-      return await this.userRepository.save(newUser);
     } catch (error) {
-      throw new Error('No se pudo crear el usuario.');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error instanceof UnauthorizedException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (create) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (create) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (create): ${error}`,
+          message: `Error del Servidor en (create): ${error}`,
+        });
+      }
     }
   }
 
@@ -94,22 +147,44 @@ export class UsersService {
     }
   }
 
-  async findOne(id: number): Promise<User | undefined> {
-    const user = await this.userRepository.findOne({ where: { id } });
-
-    if (!user) {
-      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+  async findOne2(id: number): Promise<User | undefined> {
+    try {
+      const user = await this.userRepository.findOne({ where: { id } });
+      if (!user) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El Usuario con ID ${id} NO Existe`,
+          message: `Usuario con ID ${id} no fue encontrado`,
+        });
+      }
+      return user;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findOne2) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (findOne2) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findOne2): ${error}`,
+          message: `Error del Servidor en (findOne2): ${error}`,
+        });
+      }
     }
-
-    return user;
   }
   async findOneNameUser(username: string): Promise<User | undefined> {
     const user = await this.userRepository.findOne({ where: { username } });
 
     if (!user) {
-      throw new NotFoundException(
-        `Usuario con nombre de usuario ${username} no encontrado`,
-      );
+      throw new BadRequestException({
+        statusCode: 400,
+        error: `El Usuario ${username} NO Existe`,
+        message: `Usuario con nombre de usuario ${username} no fue encontrado`,
+      });
     }
 
     return user;
@@ -125,30 +200,70 @@ export class UsersService {
       `;
 
       const result = await this.connection.query(sql);
+
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El Usuario ${buscar} NO Existe`,
+          message: `Usuario ${buscar} no fue encontrado`,
+        });
+      }
+
       return result;
     } catch (error) {
-      console.error('Error:', error);
-      throw new Error('No se pudieron obtener los usuarios.');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarUsuarios) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (buscarUsuarios) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarUsuarios): ${error}`,
+          message: `Error del Servidor en (buscarUsuarios): ${error}`,
+        });
+      }
     }
   }
-
   async update(
     id: number,
     updateUserDto: UpdateUserDto,
   ): Promise<User | undefined> {
     try {
-      const { ...rest } = updateUserDto;
+      const userExists = await this.findOne2(id);
 
+      const { ...rest } = updateUserDto;
       const updateData: Partial<User> = {
         ...rest,
       };
-
-      await this.userRepository.update(id, updateData);
-      return this.findOne(id);
+      const updateResult = await this.userRepository.update(id, updateData);
+      if (updateResult.affected === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El Usuario con ID ${id} NO se actualizo correctamente`,
+          message: `Usuario con ID ${id} no se actualizo correctamente`,
+        });
+      }
+      return this.findOne2(id);
     } catch (error) {
-      throw new Error(
-        `No se pudo actualizar el usuario. Usuario con ID ${id} no encontrado`,
-      );
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (update) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (update) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (update): ${error}`,
+          message: `Error del Servidor en (update): ${error}`,
+        });
+      }
     }
   }
   async updatePassword(
@@ -157,7 +272,7 @@ export class UsersService {
     updateUserDto: UpdateUserDto,
   ): Promise<User | undefined> {
     try {
-      const user = await this.findOne(id);
+      const user = await this.findOne2(id);
       const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30';
 
       const sha256Hash = crypto.createHmac('sha256', secretKey);
@@ -180,7 +295,7 @@ export class UsersService {
 
         await this.userRepository.update(id, updateData);
 
-        return this.findOne(id);
+        return this.findOne2(id);
       } else {
         throw new Error(
           `No se pudo actualizar el usuario. Usuario con ID ${id} su contrasena anterior no coincide`,
@@ -210,7 +325,7 @@ export class UsersService {
 
       await this.userRepository.update(id, updateData);
 
-      return this.findOne(id);
+      return this.findOne2(id);
     } catch (error) {
       throw new Error(
         `No se pudo actualizar el usuario. Usuario con ID ${id} no encontrado`,
@@ -219,8 +334,10 @@ export class UsersService {
   }
   async resetearPasswordDefecto(id: number): Promise<User | undefined> {
     try {
+      const userExists = await this.findOne2(id);
+
       const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30';
-      const defaultPassword = '708090'; // Contraseña por defecto a establecer
+      const defaultPassword = '708090';
 
       const sha256Hash = crypto.createHmac('sha256', secretKey);
       sha256Hash.update(defaultPassword);
@@ -230,13 +347,31 @@ export class UsersService {
         prioridad: 0,
         password: hashedData,
       };
-
-      await this.userRepository.update(id, updateData);
-      return this.findOne(id);
+      const updateResult = await this.userRepository.update(id, updateData);
+      if (updateResult.affected === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El Usuario con ID ${id} NO se actualizo su contraseña correctamente`,
+          message: `Usuario con ID ${id} no se actualizo su contraseña correctamente`,
+        });
+      }
+      return this.findOne2(id);
     } catch (error) {
-      throw new Error(
-        `No se pudo actualizar el usuario. Usuario con ID ${id} no encontrado`,
-      );
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (resetearPasswordDefecto) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (resetearPasswordDefecto) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (resetearPasswordDefecto): ${error}`,
+          message: `Error del Servidor en (resetearPasswordDefecto): ${error}`,
+        });
+      }
     }
   }
   async remove(id: number): Promise<void> {

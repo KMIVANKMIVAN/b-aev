@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
@@ -11,6 +15,7 @@ import { Response } from 'express';
 import * as path from 'path';
 
 import { RespaldoDesembolso } from './entities/respaldo_desembolso.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class RespaldoDesembolsosService {
@@ -18,107 +23,115 @@ export class RespaldoDesembolsosService {
     @InjectRepository(RespaldoDesembolso)
     private readonly respaldodesembolsoRepository: Repository<RespaldoDesembolso>,
     private connection: Connection,
+    private configService: ConfigService,
   ) {}
 
-  /* async create(
-    createRespaldoDesembolsoDto: CreateRespaldoDesembolsoDto,
-  ): Promise<RespaldoDesembolso> {
-    const newRespaldoDesembolso = this.respaldodesembolsoRepository.create(
-      createRespaldoDesembolsoDto,
-    );
-    return await this.respaldodesembolsoRepository.save(newRespaldoDesembolso);
-  } */
+  namePc = this.configService.get<string>('NAMEPC');
 
   async create(
     createRespaldoDesembolsoDto: CreateRespaldoDesembolsoDto,
     file: Express.Multer.File,
     res: Response,
   ): Promise<RespaldoDesembolso | Response> {
-    console.log('111');
-    console.log(createRespaldoDesembolsoDto);
-    console.log(createRespaldoDesembolsoDto.tiporespaldo_id);
+    try {
+      const { tiporespaldo_id, ...restoDeDatos } = createRespaldoDesembolsoDto;
 
-    const { tiporespaldo_id, ...restoDeDatos } = createRespaldoDesembolsoDto;
+      const fechaActual = new Date();
 
-    // Obtener la fecha y hora actual
-    const fechaActual = new Date();
+      const nuevoRespaldoDesembolso = {
+        ...restoDeDatos,
+        fecha_insert: fechaActual,
+      };
 
-    // Agregar la fecha actual al DTO
-    const nuevoRespaldoDesembolso = {
-      ...restoDeDatos,
-      fecha_insert: fechaActual,
-    };
-
-    // Crear el nuevo respaldo sin el campo archivo
-    const newRespaldoDesembolso = this.respaldodesembolsoRepository.create(
-      nuevoRespaldoDesembolso,
-    );
-
-    // Obtener la sigla de tipo_respaldo según el tiporespaldo_id
-    const tipoRespaldo = await this.connection.query(
-      `SELECT sigla FROM tipo_respaldo WHERE id = ?`,
-      [tiporespaldo_id],
-    );
-
-    if (!tipoRespaldo || !tipoRespaldo[0] || !tipoRespaldo[0].sigla) {
-      throw new NotFoundException(
-        `Tipo de respaldo con ID ${tiporespaldo_id} no encontrado o sin sigla`,
+      const newRespaldoDesembolso = this.respaldodesembolsoRepository.create(
+        nuevoRespaldoDesembolso,
       );
-    }
 
-    // Guardar el nuevo respaldo en la base de datos
-    const savedRespaldoDesembolso =
-      await this.respaldodesembolsoRepository.save(newRespaldoDesembolso);
-
-    // Construir el valor de archivo usando el ID generado y la sigla del tipo_respaldo
-    const archivo = `${savedRespaldoDesembolso.id}-${tipoRespaldo[0].sigla}`;
-
-    // Actualizar el archivo y tiporespaldo_id en el registro de respaldo_desembolsos
-    await this.respaldodesembolsoRepository.update(savedRespaldoDesembolso.id, {
-      archivo,
-      tiporespaldo_id,
-    });
-
-    // Lógica para guardar el archivo
-    if (file) {
-      if (file.mimetype !== 'application/pdf') {
-        res.status(404).send('El archivo no es un PDF válido');
-        return;
-      }
-
-      if (file.size > 10 * 1024 * 1024) {
-        res.status(404).send('El archivo excede el tamaño máximo de 10MB');
-        return;
-      }
-
-      const dateTime = this.obtenerFechaYHoraActual();
-      const uniqueName = await this.concatenarNombreConFechaHora(
-        dateTime,
-        archivo,
+      const tipoRespaldo = await this.connection.query(
+        `SELECT sigla FROM tipo_respaldo WHERE id = ?`,
+        [tiporespaldo_id],
       );
-      const destinationPath = `/home/van369/Documentos/${uniqueName}`;
 
-      try {
-        fs.writeFileSync(destinationPath, file.buffer);
-        console.log(`PDF guardado en: ${destinationPath}`);
-        // res.status(200).send('PDF guardado exitosamente');
-        const responseObj = {
-          message: 'PDF guardado exitosamente',
-          archivo: archivo,
-          respaldo: await this.findOne(savedRespaldoDesembolso.id),
-        };
-
-        // Enviar la respuesta con el objeto JSON que contiene la información requerida
-        return res.status(200).json(responseObj);
-      } catch (error) {
-        res.status(404).send('Error durante la subida del archivo');
+      if (!tipoRespaldo || !tipoRespaldo[0] || !tipoRespaldo[0].sigla) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Tipo de respaldo con ID: ${tiporespaldo_id} NO Existe`,
+          message: `Tipo de respaldo con ID: ${tiporespaldo_id}`,
+        });
       }
-    } else {
-      res.status(404).send('No se proporcionó un archivo');
-    }
 
-    // Devolver el respaldo actualizado
-    return await this.findOne(savedRespaldoDesembolso.id);
+      const savedRespaldoDesembolso =
+        await this.respaldodesembolsoRepository.save(newRespaldoDesembolso);
+
+      const archivo = `${savedRespaldoDesembolso.id}-${tipoRespaldo[0].sigla}`;
+
+      await this.respaldodesembolsoRepository.update(
+        savedRespaldoDesembolso.id,
+        {
+          archivo,
+          tiporespaldo_id,
+        },
+      );
+      if (file) {
+        if (file.mimetype !== 'application/pdf') {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: 'El archivo no es un PDF válido',
+            message: 'El archivo no es un PDF válido',
+          });
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: 'El archivo excede el tamaño máximo de 10MB',
+            message: 'El archivo excede el tamaño máximo de 10MB',
+          });
+        }
+        const dateTime = this.obtenerFechaYHoraActual();
+        const uniqueName = await this.concatenarNombreConFechaHora(
+          dateTime,
+          archivo,
+        );
+        const destinationPath = `/home/${this.namePc}/Documentos/${uniqueName}`;
+        try {
+          fs.writeFileSync(destinationPath, file.buffer);
+          const responseObj = {
+            message: 'PDF guardado exitosamente',
+            archivo: archivo,
+            respaldo: await this.findOne(savedRespaldoDesembolso.id),
+          };
+          return res.status(200).json(responseObj);
+        } catch (error) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: 'Error durante la subida del archivo',
+            message: 'Error durante la subida del archivo',
+          });
+        }
+      } else {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: 'No se proporcionó un archivo',
+          message: 'No se proporcionó un archivo',
+        });
+      }
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findOne) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (findOne) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findOne): ${error}`,
+          message: `Error del Servidor en (findOne): ${error}`,
+        });
+      }
+    }
   }
 
   async guardarPdf(
@@ -134,15 +147,11 @@ export class RespaldoDesembolsosService {
     }
     if (file) {
       if (file.mimetype !== 'application/pdf') {
-        // throw new BadRequestException('El archivo no es un PDF válido');
         res.status(404).send('El archivo no es un PDF válido');
         return;
       }
 
       if (file.size > 10 * 1024 * 1024) {
-        /* throw new BadRequestException(
-          'El archivo excede el tamaño máximo de 10MB',
-        ); */
         res.status(404).send('El archivo excede el tamaño máximo de 10MB');
         return;
       }
@@ -152,7 +161,7 @@ export class RespaldoDesembolsosService {
         dateTime,
         textToReplace,
       );
-      const destinationPath = `/home/van369/Documentos/${uniqueName}`;
+      const destinationPath = `/home/${this.namePc}/Documentos/${uniqueName}`;
 
       try {
         fs.writeFileSync(destinationPath, file.buffer);
@@ -167,7 +176,7 @@ export class RespaldoDesembolsosService {
     }
   }
   async buscarpdf(partialName: string): Promise<boolean | string> {
-    const filesDirectory = '/home/van369/Documentos/';
+    const filesDirectory = '/home/${this.namePc}/Documentos/';
 
     try {
       const filesInDirectory = fs.readdirSync(filesDirectory);
@@ -183,7 +192,6 @@ export class RespaldoDesembolsosService {
       }
     } catch (error) {
       console.error('Error al buscar el archivo PDF:', error);
-      // throw new Error('Error al buscar el archivo PDF');
       return 'HUBO PROBLEMAS AL BUSCAR';
     }
   }
@@ -204,7 +212,9 @@ export class RespaldoDesembolsosService {
     let suffix = 0;
     let uniqueName = `${textToReplace}-${dateTime}.pdf`;
 
-    while (await this.fileExists(`/home/van369/Documentos/${uniqueName}`)) {
+    while (
+      await this.fileExists(`/home/${this.namePc}/Documentos/${uniqueName}`)
+    ) {
       suffix++;
       uniqueName = `${textToReplace}-${dateTime}(${suffix}).pdf`;
     }
@@ -223,17 +233,6 @@ export class RespaldoDesembolsosService {
   async findAll(): Promise<RespaldoDesembolso[]> {
     return await this.respaldodesembolsoRepository.find();
   }
-  /* async findAllOne(desembolsos_id: number): Promise<RespaldoDesembolso[]> {
-    const respaldosDesembolso = await this.respaldodesembolsoRepository.find({
-      where: { desembolsos_id },
-    });
-    if (!respaldosDesembolso || respaldosDesembolso.length === 0) {
-      throw new NotFoundException(
-        `No se encontraron respaldos de desembolso para el ID ${desembolsos_id}`,
-      );
-    }
-    return respaldosDesembolso;
-  } */
   async findAllOne(desembolsos_id: number): Promise<any[]> {
     try {
       const respaldosDesembolso = await this.respaldodesembolsoRepository.query(
@@ -243,58 +242,32 @@ export class RespaldoDesembolsosService {
          WHERE rd.desembolsos_id = ?`,
         [desembolsos_id],
       );
-
-      if (!respaldosDesembolso || respaldosDesembolso.length === 0) {
-        throw new NotFoundException(
-          `No se encontraron respaldos de desembolso para el ID ${desembolsos_id}`,
-        );
+      if (respaldosDesembolso.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Sin datos ID: ${desembolsos_id}`,
+          message: `No se encontraron respaldos de desembolso para el ID ${desembolsos_id}`,
+        });
       }
-
       return respaldosDesembolso;
     } catch (error) {
-      // Manejo de errores
-      throw new Error(
-        `Error al buscar respaldos de desembolso: ${error.message}`,
-      );
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllOne) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (findAllOne) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllOne): ${error}`,
+          message: `Error del Servidor en (findAllOne): ${error}`,
+        });
+      }
     }
   }
-  /* async eliminarDesembIdArchiv(
-    desembolsos_id: number,
-    archivo: string,
-  ): Promise<string> {
-    try {
-      const respaldosDesembolso = await this.respaldodesembolsoRepository.query(
-        `SELECT rd.*
-         FROM respaldo_desembolsos rd
-         WHERE rd.desembolsos_id = ? AND rd.archivo = ?`,
-        [desembolsos_id, archivo],
-      );
-
-      if (!respaldosDesembolso || respaldosDesembolso.length === 0) {
-        throw new NotFoundException(
-          `No se encontraron respaldos de desembolso para el ID ${desembolsos_id} y el archivo ${archivo}`,
-        );
-      }
-
-      // Llamar a eliminarPdf con el nombre del archivo después de encontrar los respaldos
-      await this.eliminarPdf(archivo);
-
-      // Llamar a remove pasando el ID y el archivo para eliminar el registro
-      const eliminacion = await this.remove(respaldosDesembolso[0].id, archivo);
-
-      // Enviar respuesta de éxito con el mensaje de eliminación
-      return eliminacion;
-    } catch (error) {
-      // Manejar errores
-      console.error('Error al eliminar respaldo de desembolso:', error.message);
-
-      if (error instanceof NotFoundException) {
-        return 'No se encontraron respaldos para eliminar.';
-      } else {
-        return 'Hubo un problema al eliminar el respaldo de desembolso.';
-      }
-    }
-  } */
   async eliminarDesembIdArchiv(
     desembolsos_id: number,
     archivo: string,
@@ -306,120 +279,50 @@ export class RespaldoDesembolsosService {
          WHERE rd.desembolsos_id = ? AND rd.archivo = ?`,
         [desembolsos_id, archivo],
       );
-
-      if (!respaldosDesembolso || respaldosDesembolso.length === 0) {
-        throw new NotFoundException(
-          `No se encontraron respaldos de desembolso para el ID ${desembolsos_id} y el archivo ${archivo}`,
-        );
+      if (respaldosDesembolso.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No datos para ID ${desembolsos_id} y el archivo ${archivo}`,
+          message: `No se encontraron respaldos de desembolso para el ID ${desembolsos_id} y el archivo ${archivo}`,
+        });
       }
-
       const id = respaldosDesembolso[0].id;
-
-      const filesDirectory = '/home/van369/Documentos/';
-
+      const filesDirectory = `/home/${this.namePc}/Documentos/`;
       const matchingFile = fs.readdirSync(filesDirectory).find((file) => {
         const fileNameWithoutExtension = path.parse(file).name;
         const filePrefix = fileNameWithoutExtension.split('-')[0];
         const receivedPrefix = archivo.split('-')[0];
-
         return filePrefix === receivedPrefix;
       });
-
       if (!matchingFile) {
-        console.error('El archivo no se encontró');
-        throw new Error('El archivo no se encontró');
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El archivo no se encontró`,
+          message: `El archivo no se encontró`,
+        });
       }
-
       const filePath = path.join(filesDirectory, matchingFile);
       fs.unlinkSync(filePath);
-      console.log(`PDF eliminado: ${matchingFile}`);
-
       await this.respaldodesembolsoRepository.remove(respaldosDesembolso[0]);
-
       return `RespaldoDesembolso con ID ${id} y archivo ${archivo} eliminado correctamente`;
     } catch (error) {
-      console.error('Error al eliminar respaldo de desembolso:', error.message);
-
-      if (error instanceof NotFoundException) {
-        return 'No se encontraron respaldos para eliminar.';
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findOne) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (findOne) NO SE CONECTO A LA BASE DE DATOS`,
+        });
       } else {
-        return 'Hubo un problema al eliminar el respaldo de desembolso.';
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findOne): ${error}`,
+          message: `Error del Servidor en (findOne): ${error}`,
+        });
       }
     }
   }
-  /* async descargarDesembIdArchiv(
-    desembolsos_id: number,
-    archivo: string,
-    res: Response,
-  ): Promise<void> {
-    try {
-      const respaldosDesembolso = await this.respaldodesembolsoRepository.query(
-        `SELECT rd.*
-         FROM respaldo_desembolsos rd
-         WHERE rd.desembolsos_id = ? AND rd.archivo = ?`,
-        [desembolsos_id, archivo],
-      );
-
-      if (!respaldosDesembolso || respaldosDesembolso.length === 0) {
-        throw new NotFoundException(
-          `No se encontraron respaldos de desembolso para el ID ${desembolsos_id} y el archivo ${archivo}`,
-        );
-      }
-
-      const nomarchivo = respaldosDesembolso[0].archivo;
-
-      const filesDirectory = '/home/van369/Documentos/';
-
-      const filesInDirectory = fs.readdirSync(filesDirectory);
-
-      const matchingFiles = filesInDirectory.filter((file) =>
-        file.includes(nomarchivo),
-      );
-
-      if (matchingFiles.length === 0) {
-        res
-          .status(404)
-          .send('Error: ¿Estás seguro de que se subió el archivo?');
-        return;
-      }
-
-      const fileToDownload = matchingFiles[0];
-      const filePath = `${filesDirectory}${fileToDownload}`;
-
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename=${fileToDownload}`,
-      );
-
-      const fileStream = fs.createReadStream(filePath);
-
-      fileStream.pipe(res);
-
-      fileStream.on('end', () => {
-        res.end();
-      });
-
-      fileStream.on('error', (error) => {
-        console.error('Error durante la descarga del archivo:', error);
-        res.status(404).send('Error durante la descarga del archivo');
-      });
-    } catch (error) {
-      console.error(
-        'Error al descargar respaldo de desembolso:',
-        error.message,
-      );
-
-      if (error instanceof NotFoundException) {
-        res.status(404).send('No se encontraron respaldos para descargar.');
-      } else {
-        res
-          .status(404)
-          .send('Hubo un problema al descargar el respaldo de desembolso.');
-      }
-    }
-  } */
-
   async descargarDesembIdArchiv(
     desembolsos_id: number,
     archivo: string,
@@ -441,7 +344,7 @@ export class RespaldoDesembolsosService {
 
       const nomarchivo = respaldosDesembolso[0].archivo;
 
-      const filesDirectory = '/home/van369/Documentos/';
+      const filesDirectory = `/home/${this.namePc}/Documentos/`;
 
       const filesInDirectory = fs.readdirSync(filesDirectory);
 
@@ -528,7 +431,6 @@ export class RespaldoDesembolsosService {
 
       await this.respaldodesembolsoRepository.remove(respaldoDesembolso);
 
-      // Llamada a eliminarPdf después de eliminar el registro
       await this.eliminarPdf(nombrepdf);
 
       return `RespaldoDesembolso con ID ${id} y archivo ${nombrepdf} eliminado correctamente`;
@@ -539,7 +441,7 @@ export class RespaldoDesembolsosService {
     }
   }
   async eliminarPdf(nombrepdf: string): Promise<void> {
-    const filesDirectory = '/home/van369/Documentos/';
+    const filesDirectory = `/home/${this.namePc}/Documentos/`;
 
     try {
       const filesInDirectory = fs.readdirSync(filesDirectory);
@@ -553,26 +455,22 @@ export class RespaldoDesembolsosService {
       });
 
       if (!matchingFile) {
-        console.error('El archivo no se encontró');
-        throw new Error('El archivo no se encontró');
+        console.error('El archivo no se encontró 123');
+        throw new Error('El archivo no se encontró 123');
       }
 
       const filePath = path.join(filesDirectory, matchingFile);
 
-      // Eliminar el archivo
       fs.unlinkSync(filePath);
       console.log(`PDF eliminado: ${matchingFile}`);
-
-      // Enviar respuesta de éxito
-      // Usar un mensaje diferente si se eliminó el archivo correctamente
-      return; // No es necesario devolver nada en este caso
+      return;
     } catch (error) {
       console.error('Error al eliminar el PDF:', error);
       throw new Error('Error al eliminar el archivo PDF');
     }
   }
   async downloadFile(fileName: string, res: Response): Promise<void> {
-    const filesDirectory = '/home/van369/Documentos/';
+    const filesDirectory = `/home/${this.namePc}/Documentos/`;
 
     try {
       const filesInDirectory = fs.readdirSync(filesDirectory);

@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Connection } from 'typeorm';
@@ -265,7 +269,7 @@ export class DocumentpdfService {
         res.end();
       });
 
-      fileStream.on('error', (error) => {
+      fileStream.on('error', () => {
         // console.error('Error al mostrar e  l archivo PDF:', error);
         res.status(404).send('Error al mostrar el archivo PDF');
       });
@@ -306,7 +310,7 @@ export class DocumentpdfService {
         res.end();
       });
 
-      fileStream.on('error', (error) => {
+      fileStream.on('error', () => {
         res.status(404).send('Error al mostrar el archivo PDF');
       });
     } catch (error) {
@@ -315,26 +319,35 @@ export class DocumentpdfService {
   }
   async buscarpdf(partialName: string): Promise<boolean | string> {
     const filesDirectory = `/home/${this.namePc}/Documentos/`;
-
     try {
+      if (!fs.existsSync(filesDirectory)) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El Directorio ${filesDirectory} NO Existe`,
+          message: `Directorio ${filesDirectory} no fue encontrado en el S.O.`,
+        });
+      }
       const filesInDirectory = fs.readdirSync(filesDirectory);
-
       const matchingFile = filesInDirectory.find(
         (file) => file.includes(partialName) && file.endsWith('.pdf'),
       );
-
       if (matchingFile) {
         return true;
       } else {
         return false;
       }
     } catch (error) {
-      console.error('Error al buscar el archivo PDF:', error);
-      // throw new Error('Error al buscar el archivo PDF');
-      return 'HUBO PROBLEMAS AL BUSCAR';
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarpdf): ${error}`,
+          message: `Error del Servidor en (buscarpdf): ${error}`,
+        });
+      }
     }
   }
-
   async eliminarPdf(textToMatch: string, res: Response): Promise<void> {
     try {
       const filesDirectory = `/home/${this.namePc}/Documentos/`;
@@ -419,51 +432,34 @@ export class DocumentpdfService {
           ) AS resultados
           LIMIT 4;
       `;
-
       const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Vivienda Nueva ${buscar} NO Existe`,
+          message: `Vivienda Nueva ${buscar} no fue encontrado`,
+        });
+      }
       return result;
     } catch (error) {
-      console.error('Error al obtener Datoscontrato:', error.message);
-      throw new Error(
-        'No se pudieron obtener los Datoscontrato. Detalles en el registro.',
-      );
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (signIn) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (signIn) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (signIn): ${error}`,
+          message: `Error del Servidor en (signIn): ${error}`,
+        });
+      }
     }
   }
 
-  /* async base64ToPdf(
-    base64String: string,
-    fileName: string,
-    res: Response,
-  ): Promise<void> {
-    try {
-      const buffer = Buffer.from(base64String, 'base64');
-      const filesDirectory = '/home/van369/Documentos/';
-      const filePath = `${filesDirectory}${fileName}.pdf`;
-
-      console.log('Ruta del archivo:', filePath); // Verifica que la ruta sea correcta
-
-      // Guardar el archivo PDF en la ruta especificada
-      fs.writeFileSync(filePath, buffer);
-
-      console.log('Archivo guardado correctamente:', filePath); // Verifica que se haya guardado correctamente
-
-      // Enviar el archivo como respuesta
-      res.setHeader('Content-Type', 'application/pdf');
-      res.download(filePath, `${fileName}.pdf`, (err) => {
-        // Eliminar el archivo después de descargarlo
-        // fs.unlinkSync(filePath);
-        if (err) {
-          console.error('Error al descargar el archivo PDF:', err);
-          throw new Error('Error al descargar el archivo PDF');
-        } else {
-          console.log('Archivo descargado con éxito');
-        }
-      });
-    } catch (error) {
-      console.error('Error al convertir Base64 a PDF:', error);
-      throw new Error('Error al convertir Base64 a PDF');
-    }
-  } */
   async base64ToPdf(
     base64String: string,
     fileName: string,
@@ -496,20 +492,6 @@ export class DocumentpdfService {
 
         console.log('Archivo guardado correctamente:', destinationPath);
 
-        // Enviar el archivo como respuesta
-        /* res.setHeader('Content-Type', 'application/pdf');
-        res.download(destinationPath, `${uniqueName}.pdf`, (err) => {
-          if (err) {
-            console.error(
-              'Error al guardar el archivo PDF en el servidor:',
-              err,
-            );
-            throw new Error('Error al guardar el archivo PDF en el servidor');
-          } else {
-            console.log('Archivo descargado con éxito');
-          }
-        }); */
-
         console.log(`PDF guardado en: ${destinationPath}`);
 
         const numero = this.obtenerParteNumerica(fileName);
@@ -527,53 +509,10 @@ export class DocumentpdfService {
       }
     } catch (error) {
       console.error('Error al convertir Base64 a PDF:', error);
-      // throw new Error('Error al convertir Base64 a PDF');
+
       res.status(404).send('Error durante la subida del archivo try');
     }
   }
-
-  /* async enviarBanco(numero: string): Promise<string> {
-    try {
-      const buscarpdf = await this.buscarpdf(numero);
-      const seEnvioBanco = await this.verificarEnvioBanco(numero);
-
-      if (numero.includes('-AEV')) {
-        if (buscarpdf) {
-          if (!seEnvioBanco) {
-            const sql = `
-              UPDATE desembolsos
-              SET fecha_banco = '${this.obtenerFechaYHoraActualSQL()}'
-              WHERE id = '${numero}';
-            `;
-            await this.connection.query(sql);
-            return 'Se envió al BANCO';
-          }
-          return 'Ya se envió al BANCO';
-        }
-        return 'No se ha subido el Instrucitvo y/o Anexos';
-      } else if (numero.includes('-BUSA')) {
-        if (buscarpdf) {
-          if (!seEnvioBanco) {
-            const sql = `
-            UPDATE desembolsos
-            SET fecha_busa = '${this.obtenerFechaYHoraActualSQL()}'
-            WHERE id = '${numero}';
-          `;
-            await this.connection.query(sql);
-            return 'Se envió a la AEV';
-          }
-          return 'Ya se envió al BANCO';
-        }
-        return 'No se ha subido el Instrucitvo y/o Anexos';
-      } else {
-        throw new Error('Número no tiene el formato adecuado');
-      }
-    } catch (error) {
-      throw new Error(
-        'Error al ejecutar la consulta SQL para actualizar el registro',
-      );
-    }
-  } */
   async enviarBanco(numero: string): Promise<string> {
     try {
       const buscarpdf = await this.buscarpdf(numero);

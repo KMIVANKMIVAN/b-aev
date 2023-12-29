@@ -18,9 +18,9 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   // @UseGuards(AuthGuard)
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @Post('create/:nivel')
+  create(@Param('nivel') nivel: number, @Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(nivel, createUserDto);
   }
 
   @UseGuards(AuthGuard)
@@ -37,7 +37,7 @@ export class UsersController {
   @UseGuards(AuthGuard)
   @Get('id/:id')
   findOne(@Param('id') id: number) {
-    return this.usersService.findOne(id);
+    return this.usersService.findOne2(id);
   }
 
   @UseGuards(AuthGuard)
@@ -48,7 +48,7 @@ export class UsersController {
   @UseGuards(AuthGuard)
   @Get('/buscar/:buscar')
   buscarUsuarios(@Param('buscar') buscar: string) {
-    return this.usersService.buscarUsuarios(buscar); // Pasar los parámetros a la función
+    return this.usersService.buscarUsuarios(buscar);
   }
   @UseGuards(AuthGuard)
   @Patch('updatepassword/:id/:antiguop')

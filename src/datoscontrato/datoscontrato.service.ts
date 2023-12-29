@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
@@ -95,22 +99,41 @@ export class DatoscontratoService {
         WHERE cont = ?
         ) ORDER BY orden ASC
       `;
-
       const result = await this.connection.query(sql, [
         contcod,
         contcod,
         contcod,
       ]);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Vivienda Nueva ${contcod} NO Existe`,
+          message: `Vivienda Nueva ${contcod} no se encontraron datos`,
+        });
+      }
       return result;
     } catch (error) {
-      throw new Error('No se pudieron obtener los Datoscontrato.');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarUsuarios) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (buscarUsuarios) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarUsuarios): ${error}`,
+          message: `Error del Servidor en (buscarUsuarios): ${error}`,
+        });
+      }
     }
   }
 
   async findOneContCodCompleja(contcod: string): Promise<any> {
     try {
       const datosContCod = await this.findOneContCod(contcod);
-
       if (datosContCod !== null && datosContCod !== undefined) {
         const sql = `
           SELECT 
@@ -130,21 +153,14 @@ export class DatoscontratoService {
           WHERE d.estado = 6
           AND d.cont_cod = ?
         `;
-
         const result = await this.connection.query(sql, [contcod]);
-
-        // Obtener los ids necesarios para AEV y BUSA
-        const ids = result.map((data: any) => data.id); // Asumiendo que 'id' es el campo que contiene el ID necesario
-
-        // Verificar envío para AEV y BUSA
+        const ids = result.map((data: any) => data.id);
         const buttonAEVResponses = await Promise.all(
           ids.map((id: string) => this.verificarEnvioBanco(`${id}-AEV`)),
         );
         const buttonBUSAResponses = await Promise.all(
           ids.map((id: string) => this.verificarEnvioBanco(`${id}-BUSA`)),
         );
-
-        // Asignar valores a buttonAEV y buttonBUSA según las respuestas
         const resultWithButtons = result.map((data: any, index: number) => {
           return {
             ...data,
@@ -152,13 +168,37 @@ export class DatoscontratoService {
             buttonBUSA: buttonBUSAResponses[index],
           };
         });
-
+        if (resultWithButtons.length === 0) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: `Vivienda Nueva con ${contcod} NO Existe`,
+            message: `Vivienda Nueva con ${contcod} no fueron encontrados`,
+          });
+        }
         return resultWithButtons;
       } else {
-        return null; // Si no se encontraron datos en findOneContCod, devuelve null
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Vivienda Nueva con ${contcod} NO Existe`,
+          message: `Vivienda Nueva con ${contcod} no fue encontrado`,
+        });
       }
     } catch (error) {
-      throw new Error('No se pudieron obtener los Datoscontrato.');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarUsuarios) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (buscarUsuarios) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarUsuarios): ${error}`,
+          message: `Error del Servidor en (buscarUsuarios): ${error}`,
+        });
+      }
     }
   }
   async verificarEnvioBanco(numero: string): Promise<boolean> {

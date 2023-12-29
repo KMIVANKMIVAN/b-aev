@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Connection } from 'typeorm';
@@ -50,9 +54,30 @@ export class CuadroService {
           AND p.num LIKE '%${contcod}%' OR p.proyecto_nombre LIKE '%${contcod}%';
       `;
       const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se encontraron datos para el código ${contcod}`,
+          message: `No se encontraron datos para el código ${contcod}`,
+        });
+      }
       return result;
     } catch (error) {
-      throw new Error('Unable to fetch consultaCuadro data');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (consultaCuadro) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (consultaCuadro) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (consultaCuadro): ${error}`,
+          message: `Error del Servidor en (consultaCuadro): ${error}`,
+        });
+      }
     }
   }
   async consultaBusa(): Promise<Cuadro[]> {
@@ -97,29 +122,32 @@ export class CuadroService {
         AND ISNULL(d.archivo_busa)
       `;
       const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se encontraron datos para la fecha seleccionada 2023-12-01`,
+          message: `No se encontraron datos para la fecha seleccionada 2023-12-01`,
+        });
+      }
       return result;
     } catch (error) {
-      throw new Error('Unable to fetch consultaCuadro data');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (consultaBusa) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (consultaBusa) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (consultaBusa): ${error}`,
+          message: `Error del Servidor en (consultaBusa): ${error}`,
+        });
+      }
     }
   }
-  /* async consultaSipago(codid: string): Promise<Cuadro[]> {
-    try {
-      const sql = `
-      SELECT tp.detalle,tp.id as idtipo,e.etapa,DATE_FORMAT(d.fecha_generado,'%d/%m/%Y') as fechagenerado,DATE_FORMAT(d.fecha_banco,'%d/%m/%Y') as fechabanco,d.*
-      FROM desembolsos d
-      INNER JOIN tipoplanillas tp ON d.tipo_planilla = tp.id
-      INNER JOIN etapas e ON d.estado = e.id
-      WHERE d.proyecto_id = ${codid} 
-      AND d.estado = 6
-      AND d.activo = 1
-      ORDER BY d.id desc
-      `;
-      const result = await this.connection.query(sql);
-      return result;
-    } catch (error) {
-      throw new Error('Unable to fetch consultaCuadro data');
-    }
-  } */
   async consultaSipago(codid: string): Promise<Cuadro[]> {
     try {
       const sql = `

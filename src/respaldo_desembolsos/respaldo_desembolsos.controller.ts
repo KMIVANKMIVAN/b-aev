@@ -25,8 +25,8 @@ export class RespaldoDesembolsosController {
     private readonly respaldoDesembolsosService: RespaldoDesembolsosService,
   ) {}
 
-  @Post()
   @UseGuards(AuthGuard)
+  @Post()
   @UseInterceptors(FileInterceptor('file'))
   create(
     @Body() createRespaldoDesembolsoDto: CreateRespaldoDesembolsoDto,
@@ -39,11 +39,6 @@ export class RespaldoDesembolsosController {
       res,
     );
   }
-
-  /* @Post()
-  create(@Body() createRespaldoDesembolsoDto: CreateRespaldoDesembolsoDto) {
-    return this.respaldoDesembolsosService.create(createRespaldoDesembolsoDto);
-  } */
 
   @UseGuards(AuthGuard)
   @Get()
