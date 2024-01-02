@@ -46,12 +46,7 @@ import { CuadroModule } from './cuadro/cuadro.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      // Esto cargará y analizará un archivo .env desde la ubicación predeterminada
-      // (el directorio raíz del proyecto)
-      // fusionará pares clave/valor del archivo .env con variables de entorno asignadas process.env
-      // y almacenará el resultado en una estructura privada accesible a través de ConfigService.
-      // Este método también registra el proveedor ConfigService.
-      isGlobal: true, // Esto permite que ConfigService sea global y esté disponible en toda la aplicación
+      isGlobal: true,
     }),
 
     UsersModule,
@@ -71,30 +66,7 @@ import { CuadroModule } from './cuadro/cuadro.module';
     RespaldoDesembolsosModule,
     TipoRespaldoModule,
 
-    /* TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: '',
-      database: 'aev',
-      entities: [
-        User,
-        RolesUser,
-        Contratosigepro,
-        Datoscontrato,
-        Planillasporcontrato,
-        Planillasigepro,
-        Planillascierresaldo,
-        Documentpdf,
-        Desembolso,
-        Etapa,
-        Titularcuenta,
-        Devolucione,
-      ],
-      synchronize: false, // Sincronizar automáticamente las estructuras de la base de datos (solo en desarrollo)
-    }), */
-    /* TypeOrmModule.forRoot({
+    TypeOrmModule.forRoot({
       logging: true,
       entities: [
         User,
@@ -124,16 +96,7 @@ import { CuadroModule } from './cuadro/cuadro.module';
     }),
     TypeOrmModule.forRoot({
       logging: true,
-      entities: [
-        Proyectosexcel,
-        Departamento,
-        Estado,
-        TbActividade,
-        Tipo,
-        Modalidade,
-        Fiscale,
-        Estructuracosto,
-      ],
+      entities: [],
       synchronize: false,
       multipleStatements: true,
       name: 'cuadroConnection',
@@ -143,9 +106,9 @@ import { CuadroModule } from './cuadro/cuadro.module';
       username: 'root',
       password: '',
       database: 'cuadro',
-    }), 
-    CuadroModule,*/
-    TypeOrmModule.forRoot({
+    }),
+    CuadroModule,
+    /* TypeOrmModule.forRoot({
       logging: true,
       entities: [
         User,
@@ -186,7 +149,7 @@ import { CuadroModule } from './cuadro/cuadro.module';
       password: '43vivienda',
       database: 'cuadro',
     }),
-    CuadroModule,
+    CuadroModule, */
   ],
   controllers: [AppController],
   providers: [AppService],

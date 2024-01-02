@@ -527,15 +527,27 @@ export class DocumentpdfService {
         columnaFecha = 'fecha_busa';
         mensajeExito = 'Se envió a la AEV';
       } else {
-        throw new Error('Número no tiene el formato adecuado');
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Número no tiene el formato adecuado`,
+          message: `Número no tiene el formato adecuado`,
+        });
       }
 
       if (!buscarpdf) {
-        return 'No se ha subido el Instrucitvo y/o Anexos';
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se ha subido el Instrucitvo y/o Anexos`,
+          message: `No se ha subido el Instrucitvo y/o Anexos`,
+        });
       }
 
       if (seEnvioBanco) {
-        return 'Ya se envió al BANCO y/o AEV';
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Ya se envió al BANCO y/o AEV`,
+          message: `Ya se envió al BANCO y/o AEV`,
+        });
       }
 
       const sql = `
@@ -543,13 +555,31 @@ export class DocumentpdfService {
         SET ${columnaFecha} = '${this.obtenerFechaYHoraActualSQL()}'
         WHERE id = '${numero}';
       `;
-
-      await this.connection.query(sql);
+      const result = await this.connection.query(sql);
+      if (result.affectedRows === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Error al actualizar el registro en la base de datos`,
+          message: `Error al actualizar el registro en la base de datos`,
+        });
+      }
       return mensajeExito;
     } catch (error) {
-      throw new Error(
-        'Error al ejecutar la consulta SQL para actualizar el registro',
-      );
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (enviarBanco) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (enviarBanco) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (enviarBanco): ${error}`,
+          message: `Error del Servidor en (enviarBanco): ${error}`,
+        });
+      }
     }
   }
 

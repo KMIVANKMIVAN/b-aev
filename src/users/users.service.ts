@@ -196,7 +196,7 @@ export class UsersService {
           SELECT * FROM users
           WHERE username LIKE '%${buscar}%' OR cedula_identidad LIKE '%${buscar}%'
           ) AS resultados
-          LIMIT 10;
+          LIMIT 5;
       `;
 
       const result = await this.connection.query(sql);
