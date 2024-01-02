@@ -123,12 +123,6 @@ export class UsersService {
         throw error;
       } else if (error instanceof UnauthorizedException) {
         throw error;
-      } else if (error.code === 'CONNECTION_ERROR') {
-        throw new InternalServerErrorException({
-          statusCode: 500,
-          error: `Error del Servidor en (create) NO SE CONECTO A LA BASE DE DATOS`,
-          message: `Error del Servidor en (create) NO SE CONECTO A LA BASE DE DATOS`,
-        });
       } else {
         throw new InternalServerErrorException({
           statusCode: 500,
@@ -141,9 +135,25 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     try {
-      return await this.userRepository.find();
+      const users = await this.userRepository.find();
+      if (users.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se encontraron users.`,
+          message: `No se encontraron users.`,
+        });
+      }
+      return users;
     } catch (error) {
-      throw new Error('No se pudieron obtener los usuarios.');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAll): ${error}`,
+          message: `Error del Servidor en (findAll): ${error}`,
+        });
+      }
     }
   }
 
@@ -161,12 +171,6 @@ export class UsersService {
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
-      } else if (error.code === 'CONNECTION_ERROR') {
-        throw new InternalServerErrorException({
-          statusCode: 500,
-          error: `Error del Servidor en (findOne2) NO SE CONECTO A LA BASE DE DATOS`,
-          message: `Error del Servidor en (findOne2) NO SE CONECTO A LA BASE DE DATOS`,
-        });
       } else {
         throw new InternalServerErrorException({
           statusCode: 500,
@@ -177,17 +181,28 @@ export class UsersService {
     }
   }
   async findOneNameUser(username: string): Promise<User | undefined> {
-    const user = await this.userRepository.findOne({ where: { username } });
+    try {
+      const user = await this.userRepository.findOne({ where: { username } });
 
-    if (!user) {
-      throw new BadRequestException({
-        statusCode: 400,
-        error: `El Usuario ${username} NO Existe`,
-        message: `Usuario con nombre de usuario ${username} no fue encontrado`,
-      });
+      if (!user) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El Usuario ${username} NO Existe`,
+          message: `Usuario con nombre de usuario ${username} no fue encontrado`,
+        });
+      }
+      return user;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (updatePassword): ${error}`,
+          message: `Error del Servidor en (updatePassword): ${error}`,
+        });
+      }
     }
-
-    return user;
   }
   async buscarUsuarios(buscar: string): Promise<User[]> {
     try {
@@ -198,9 +213,7 @@ export class UsersService {
           ) AS resultados
           LIMIT 5;
       `;
-
       const result = await this.connection.query(sql);
-
       if (result.length === 0) {
         throw new BadRequestException({
           statusCode: 400,
@@ -208,7 +221,6 @@ export class UsersService {
           message: `Usuario ${buscar} no fue encontrado`,
         });
       }
-
       return result;
     } catch (error) {
       if (error instanceof BadRequestException) {
@@ -282,7 +294,6 @@ export class UsersService {
       const anti = sha256Hash.digest('hex');
 
       if (anti === user.password) {
-        console.log('si es la antigua');
         const sha256HashNew = crypto.createHmac('sha256', secretKey);
 
         sha256HashNew.update(updateUserDto.password);
@@ -293,16 +304,32 @@ export class UsersService {
           password: newPassword,
         };
 
-        await this.userRepository.update(id, updateData);
-
+        const updateResult = await this.userRepository.update(id, updateData);
+        if (updateResult.affected === 0) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: `El Usuario con ID ${id} NO se actualizo su contraseña correctamente`,
+            message: `Usuario con ID ${id} no se actualizo su contraseña correctamente`,
+          });
+        }
         return this.findOne2(id);
       } else {
-        throw new Error(
-          `No se pudo actualizar el usuario. Usuario con ID ${id} su contrasena anterior no coincide`,
-        );
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se pudo actualizar el usuario. Usuario con ID ${id} su contrasena anterior no coincide`,
+          message: `No se pudo actualizar el usuario. Usuario con ID ${id} su contrasena anterior no coincide`,
+        });
       }
     } catch (error) {
-      throw error;
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (updatePassword): ${error}`,
+          message: `Error del Servidor en (updatePassword): ${error}`,
+        });
+      }
     }
   }
   async resetPassword(
@@ -310,6 +337,8 @@ export class UsersService {
     updateUserDto: UpdateUserDto,
   ): Promise<User | undefined> {
     try {
+      const userExists = await this.findOne2(id);
+
       const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30';
 
       const sha256Hash = crypto.createHmac('sha256', secretKey);
@@ -323,13 +352,25 @@ export class UsersService {
         password: hashedData,
       };
 
-      await this.userRepository.update(id, updateData);
-
+      const updateResult = await this.userRepository.update(id, updateData);
+      if (updateResult.affected === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El Usuario con ID ${id} NO se actualizo su contraseña correctamente`,
+          message: `Usuario con ID ${id} no se actualizo su contraseña correctamente`,
+        });
+      }
       return this.findOne2(id);
     } catch (error) {
-      throw new Error(
-        `No se pudo actualizar el usuario. Usuario con ID ${id} no encontrado`,
-      );
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (resetPassword): ${error}`,
+          message: `Error del Servidor en (resetPassword): ${error}`,
+        });
+      }
     }
   }
   async resetearPasswordDefecto(id: number): Promise<User | undefined> {
@@ -359,12 +400,6 @@ export class UsersService {
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
-      } else if (error.code === 'CONNECTION_ERROR') {
-        throw new InternalServerErrorException({
-          statusCode: 500,
-          error: `Error del Servidor en (resetearPasswordDefecto) NO SE CONECTO A LA BASE DE DATOS`,
-          message: `Error del Servidor en (resetearPasswordDefecto) NO SE CONECTO A LA BASE DE DATOS`,
-        });
       } else {
         throw new InternalServerErrorException({
           statusCode: 500,

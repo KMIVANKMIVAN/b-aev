@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotFoundException } from '@nestjs/common';
 
 import { Contratosigepro } from './entities/contratosigepro.entity';
 
@@ -14,21 +17,51 @@ export class ContratosigeproService {
 
   async findAll(): Promise<Contratosigepro[]> {
     try {
-      return await this.contratosigeproRepository.find();
+      const contratosigepro = await this.contratosigeproRepository.find();
+      if (contratosigepro.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se pudieron obtener los Contratosigepro`,
+          message: `No se pudieron obtener los Contratosigepro Sin datos`,
+        });
+      }
+      return contratosigepro;
     } catch (error) {
-      throw new Error('No se pudieron obtener los Contratosigepro.');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAll): ${error}`,
+          message: `Error del Servidor en (findAll): ${error}`,
+        });
+      }
     }
   }
 
   async findOne(id: number): Promise<Contratosigepro> {
-    const contratosigepro = await this.contratosigeproRepository.findOne({
-      where: { id },
-    });
-
-    if (!contratosigepro) {
-      throw new NotFoundException(`Contratosigepro con ID ${id} no encontrado`);
+    try {
+      const contratosigepro = await this.contratosigeproRepository.findOne({
+        where: { id },
+      });
+      if (!contratosigepro) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Contratosigepro con ID ${id} no encontrado`,
+          message: `Contratosigepro con ID ${id} no encontrado`,
+        });
+      }
+      return contratosigepro;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findOne): ${error}`,
+          message: `Error del Servidor en (findOne): ${error}`,
+        });
+      }
     }
-
-    return contratosigepro;
   }
 }

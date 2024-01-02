@@ -397,37 +397,68 @@ export class RespaldoDesembolsosService {
   }
 
   async findOne(id: number): Promise<RespaldoDesembolso> {
-    const respaldoDesembolso = await this.respaldodesembolsoRepository.findOne({
-      where: { id },
-    });
-    if (!respaldoDesembolso) {
-      throw new NotFoundException(
-        `RespaldoDesembolso con ID ${id} no encontrado`,
-      );
+    try {
+      const respaldoDesembolso =
+        await this.respaldodesembolsoRepository.findOne({
+          where: { id },
+        });
+      if (!respaldoDesembolso) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `RespaldoDesembolso con ID ${id} no encontrado`,
+          message: `RespaldoDesembolso con ID ${id} no encontrado`,
+        });
+      }
+      return respaldoDesembolso;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findOne): ${error}`,
+          message: `Error del Servidor en (findOne): ${error}`,
+        });
+      }
     }
-    return respaldoDesembolso;
   }
 
   async update(
     id: number,
     updateRespaldoDesembolsoDto: UpdateRespaldoDesembolsoDto,
   ): Promise<RespaldoDesembolso> {
-    const respaldoDesembolso = await this.findOne(id);
-    this.respaldodesembolsoRepository.merge(
-      respaldoDesembolso,
-      updateRespaldoDesembolsoDto,
-    );
-    return await this.respaldodesembolsoRepository.save(respaldoDesembolso);
+    try {
+      const respaldoDesembolso = await this.findOne(id);
+      this.respaldodesembolsoRepository.merge(
+        respaldoDesembolso,
+        updateRespaldoDesembolsoDto,
+      );
+      const updateResult =
+        await this.respaldodesembolsoRepository.save(respaldoDesembolso);
+      if (!updateResult) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Error al actualizar el RespaldoDesembolso.`,
+          message: `Error al actualizar el RespaldoDesembolso.`,
+        });
+      }
+      return updateResult;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (update): ${error}`,
+          message: `Error del Servidor en (update): ${error}`,
+        });
+      }
+    }
   }
 
   async remove(id: number, nombrepdf: string): Promise<string> {
     try {
       const respaldoDesembolso = await this.findOne(id);
-      if (!respaldoDesembolso) {
-        throw new NotFoundException(
-          `RespaldoDesembolso con ID ${id} no encontrado`,
-        );
-      }
 
       await this.respaldodesembolsoRepository.remove(respaldoDesembolso);
 
@@ -435,9 +466,15 @@ export class RespaldoDesembolsosService {
 
       return `RespaldoDesembolso con ID ${id} y archivo ${nombrepdf} eliminado correctamente`;
     } catch (error) {
-      throw new Error(
-        `Error al eliminar el RespaldoDesembolso: ${error.message}`,
-      );
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (remove): ${error}`,
+          message: `Error del Servidor en (remove): ${error}`,
+        });
+      }
     }
   }
   async eliminarPdf(nombrepdf: string): Promise<void> {
@@ -448,25 +485,34 @@ export class RespaldoDesembolsosService {
 
       const matchingFile = filesInDirectory.find((file) => {
         const fileNameWithoutExtension = path.parse(file).name;
-        const filePrefix = fileNameWithoutExtension.split('-')[0]; // Obtener los primeros caracteres antes del guion
-        const receivedPrefix = nombrepdf.split('-')[0]; // Obtener los primeros caracteres del nombre recibido
+        const filePrefix = fileNameWithoutExtension.split('-')[0];
+        const receivedPrefix = nombrepdf.split('-')[0];
 
         return filePrefix === receivedPrefix;
       });
 
       if (!matchingFile) {
-        console.error('El archivo no se encontró 123');
-        throw new Error('El archivo no se encontró 123');
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El archivo ${nombrepdf} no se encontró 123`,
+          message: `El archivo ${nombrepdf} no se encontró 123`,
+        });
       }
 
       const filePath = path.join(filesDirectory, matchingFile);
 
       fs.unlinkSync(filePath);
-      console.log(`PDF eliminado: ${matchingFile}`);
       return;
     } catch (error) {
-      console.error('Error al eliminar el PDF:', error);
-      throw new Error('Error al eliminar el archivo PDF');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (eliminarPdf): ${error}`,
+          message: `Error del Servidor en (eliminarPdf): ${error}`,
+        });
+      }
     }
   }
   async downloadFile(fileName: string, res: Response): Promise<void> {

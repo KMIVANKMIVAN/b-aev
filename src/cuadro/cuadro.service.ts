@@ -8,13 +8,17 @@ import { Repository } from 'typeorm';
 import { Connection } from 'typeorm';
 
 import { Cuadro } from './entities/cuadro.entity';
+import { ConfigService } from '@nestjs/config';
+
 @Injectable()
 export class CuadroService {
   constructor(
     @InjectRepository(Cuadro)
     private readonly CuadroRepository: Repository<Cuadro>,
     private connection: Connection,
+    private configService: ConfigService,
   ) {}
+  fechainicio = this.configService.get<string>('FECHAINICIO');
 
   async consultaCuadro(contcod: string): Promise<Cuadro[]> {
     try {
@@ -150,10 +154,78 @@ export class CuadroService {
       AND d.estado = 6
       AND NOT ISNULL(d.archivo)
       AND NOT ISNULL(d.fecha_banco)
-      AND d.fecha_insert >= '2023-12-01'
+      AND d.fecha_insert >= ${this.fechainicio}
       AND ISNULL(d.fecha_busa) 
       AND ISNULL(d.archivo_busa)
-  LIMIT 4;  
+  LIMIT 100;  
+      `;
+      const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se encontraron datos para la fecha seleccionada 2023-12-01`,
+          message: `No se encontraron datos para la fecha seleccionada 2023-12-01`,
+        });
+      }
+      return result;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (consultaBusa) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (consultaBusa) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (consultaBusa): ${error}`,
+          message: `Error del Servidor en (consultaBusa): ${error}`,
+        });
+      }
+    }
+  }
+  async consultaBusaAev(): Promise<Cuadro[]> {
+    try {
+      const sql = `
+      SELECT
+      p.id AS id_proyecto,
+      p.num AS codigo,
+      p.proyecto_nombre AS nombre_proyecto,
+      t.tipo AS tipo,
+      d.id AS id_desembolso,
+      d.cont_cod,
+      d.monto_fisico,
+      d.descuento_anti_reten,
+      d.multa,
+      d.monto_desembolsado,
+      d.idcuenta,
+      c.titular,
+      c.cuentatitular,
+      d.estado,
+      d.numero_inst,
+      d.numero_factura,
+      d.fecha_insert,
+      d.objeto,
+      d.fecha_banco,
+      d.archivo,
+      d.fecha_busa,
+      d.archivo_busa,
+      d.fecha_abono 
+  FROM sipago.desembolsos d,
+      cuadro.proyectosexcel p,
+      cuadro.tipo t,
+      sipago.titularcuenta c
+  WHERE d.proyecto_id = p.id
+      AND p.idTipo = t.idTipo
+      AND d.idcuenta = c.id
+      AND d.estado = 6
+      AND NOT ISNULL(d.archivo)
+      AND NOT ISNULL(d.fecha_banco)
+      AND d.fecha_insert >= ${this.fechainicio}
+      AND NOT ISNULL(d.fecha_busa) 
+      AND NOT ISNULL(d.archivo_busa)
       `;
       const result = await this.connection.query(sql);
       if (result.length === 0) {
@@ -240,23 +312,51 @@ export class CuadroService {
   }
   async verificarEnvioBanco(numero: string): Promise<boolean> {
     try {
-      // const idnum = this.obtenerParteNumerica(numero);
-      const idnum = numero;
       if (numero.includes('-AEV')) {
-        const sql = `SELECT d.fecha_banco FROM desembolsos d WHERE d.id = '${idnum}'`;
+        const sql = `SELECT d.fecha_banco FROM desembolsos d WHERE d.id = '${numero}'`;
         const result = await this.connection.query(sql);
+        if (result.length === 0) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: `No se pudieron obtener datos para el codigo: ${numero}`,
+            message: `No se pudieron obtener datos para el codigo: ${numero}`,
+          });
+        }
         return result[0].fecha_banco !== null;
       } else if (numero.includes('-BUSA')) {
-        const sql = `SELECT d.fecha_busa FROM desembolsos d WHERE d.id = '${idnum}'`;
+        const sql = `SELECT d.fecha_busa FROM desembolsos d WHERE d.id = '${numero}'`;
         const result = await this.connection.query(sql);
+        if (result.length === 0) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: `No se pudieron obtener datos para el codigo: ${numero}`,
+            message: `No se pudieron obtener datos para el codigo: ${numero}`,
+          });
+        }
         return result[0].fecha_busa !== null;
       } else {
-        throw new Error('Número no tiene el formato adecuado');
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Número no tiene el formato adecuado`,
+          message: `Número no tiene el formato adecuados`,
+        });
       }
     } catch (error) {
-      throw new Error(
-        'Error al ejecutar la consulta SQL para obtener los datos',
-      );
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (verificarEnvioBanco) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (verificarEnvioBanco) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (verificarEnvioBanco): ${error}`,
+          message: `Error del Servidor en (verificarEnvioBanco): ${error}`,
+        });
+      }
     }
   }
 
@@ -264,80 +364,240 @@ export class CuadroService {
     try {
       const sql = 'SELECT * FROM cuadro.proyectosexcel LIMIT 5';
       const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se pudieron obtener los Proyectosexcel`,
+          message: `No se pudieron obtener los Proyectosexcel Sin datos`,
+        });
+      }
       return result;
     } catch (error) {
-      // console.error('Error while fetching data:', error);
-      throw new Error('Unable to fetch proyectosexcel data');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllProyectosexcel) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (findAllProyectosexcel) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllProyectosexcel): ${error}`,
+          message: `Error del Servidor en (findAllProyectosexcel): ${error}`,
+        });
+      }
     }
   }
   async findAllDepartamentos(): Promise<Cuadro[]> {
     try {
       const sql = 'SELECT * FROM cuadro.departamentos';
       const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se pudieron obtener los Departamentos`,
+          message: `No se pudieron obtener los Departamentos Sin datos`,
+        });
+      }
       return result;
     } catch (error) {
-      // console.error('Error while fetching data:', error);
-      throw new Error('Unable to fetch departamentos data');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllDepartamentos) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (findAllDepartamentos) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllDepartamentos): ${error}`,
+          message: `Error del Servidor en (findAllDepartamentos): ${error}`,
+        });
+      }
     }
   }
   async findAllEstados(): Promise<Cuadro[]> {
     try {
       const sql = 'SELECT * FROM cuadro.estados';
       const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se pudieron obtener los Estados`,
+          message: `No se pudieron obtener los Estados Sin datos`,
+        });
+      }
       return result;
     } catch (error) {
-      // console.error('Error while fetching data:', error);
-      throw new Error('Unable to fetch estados data');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllEstados) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (findAllEstados) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllEstados): ${error}`,
+          message: `Error del Servidor en (findAllEstados): ${error}`,
+        });
+      }
     }
   }
   async findAllTb_actividades(): Promise<Cuadro[]> {
     try {
       const sql = 'SELECT * FROM cuadro.tb_actividades';
       const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se pudieron obtener los Tb_actividades`,
+          message: `No se pudieron obtener los Tb_actividades Sin datos`,
+        });
+      }
       return result;
     } catch (error) {
-      // console.error('Error while fetching data:', error);
-      throw new Error('Unable to fetch tb_actividades data');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllTb_actividades) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (findAllTb_actividades) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllTb_actividades): ${error}`,
+          message: `Error del Servidor en (findAllTb_actividades): ${error}`,
+        });
+      }
     }
   }
   async findAllTipo(): Promise<Cuadro[]> {
     try {
       const sql = 'SELECT * FROM cuadro.tipo';
       const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se pudieron obtener los findAllTipo`,
+          message: `No se pudieron obtener los findAllTipo Sin datos`,
+        });
+      }
       return result;
     } catch (error) {
-      // console.error('Error while fetching data:', error);
-      throw new Error('Unable to fetch tipo data');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllTipo) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (findAllTipo) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllTipo): ${error}`,
+          message: `Error del Servidor en (findAllTipo): ${error}`,
+        });
+      }
     }
   }
   async findAllModalidades(): Promise<Cuadro[]> {
     try {
       const sql = 'SELECT * FROM cuadro.modalidades LIMIT 5';
       const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se pudieron obtener los findAllModalidades`,
+          message: `No se pudieron obtener los findAllModalidades Sin datos`,
+        });
+      }
       return result;
     } catch (error) {
-      // console.error('Error while fetching data:', error);
-      throw new Error('Unable to fetch modalidades data');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllModalidades) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (findAllModalidades) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllModalidades): ${error}`,
+          message: `Error del Servidor en (findAllModalidades): ${error}`,
+        });
+      }
     }
   }
   async findAllFiscales(): Promise<Cuadro[]> {
     try {
       const sql = 'SELECT * FROM cuadro.fiscales';
       const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se pudieron obtener los findAllFiscales`,
+          message: `No se pudieron obtener los findAllFiscales Sin datos`,
+        });
+      }
       return result;
     } catch (error) {
-      // console.error('Error while fetching data:', error);
-      throw new Error('Unable to fetch fiscales data');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllFiscales) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (findAllFiscales) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllFiscales): ${error}`,
+          message: `Error del Servidor en (findAllFiscales): ${error}`,
+        });
+      }
     }
   }
   async findAllEstructuracostos(): Promise<Cuadro[]> {
     try {
       const sql = 'SELECT * FROM cuadro.estructuracostos LIMIT 10';
       const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se pudieron obtener los findAllEstructuracostos`,
+          message: `No se pudieron obtener los findAllEstructuracostos Sin datos`,
+        });
+      }
       return result;
     } catch (error) {
-      // console.error('Error while fetching data:', error);
-      throw new Error('Unable to fetch estructuracostos data');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllEstructuracostos) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (findAllEstructuracostos) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAllEstructuracostos): ${error}`,
+          message: `Error del Servidor en (findAllEstructuracostos): ${error}`,
+        });
+      }
     }
   }
 }

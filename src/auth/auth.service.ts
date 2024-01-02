@@ -20,6 +20,14 @@ export class AuthService {
     try {
       const user = await this.usersService.findOneNameUser(username);
 
+      if (user.habilitado === 0) {
+        throw new BadRequestException({
+          statusCode: 401,
+          error: `Usuario ${username} NO ESTA HABILITADO`,
+          message: `Usuario ${username} NO ESTA HABILITADO`,
+        });
+      }
+
       const secretKey = '2, 4, 6, 7, 9, 15, 20, 23, 25, 30';
       const sha256Hash = crypto.createHmac('sha256', secretKey);
 

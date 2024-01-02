@@ -7,13 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Connection } from 'typeorm';
 
-import { HttpService } from '@nestjs/axios';
 import * as fs from 'fs';
-// import { PDFDocument } from 'pdfjs-dist/build/pdf';
-
-// import { PDFDocument } from 'pdfjs-dist/build/pdf.mjs';
-// import { PDFDocument } from 'pdf-lib';
-// import * as PDFDocument from 'pdfkit';
 
 import { Documentpdf } from './entities/documentpdf.entity';
 import { Response } from 'express';
@@ -27,7 +21,6 @@ export class DocumentpdfService {
     @InjectRepository(Documentpdf)
     private readonly documentpdfRepository: Repository<Documentpdf>,
     private connection: Connection,
-    private httpService: HttpService,
 
     private configService: ConfigService,
   ) {}
@@ -47,15 +40,11 @@ export class DocumentpdfService {
     }
     if (file) {
       if (file.mimetype !== 'application/pdf') {
-        // throw new BadRequestException('El archivo no es un PDF válido');
         res.status(404).send('El archivo no es un PDF válido');
         return;
       }
 
       if (file.size > 10 * 1024 * 1024) {
-        /* throw new BadRequestException(
-          'El archivo excede el tamaño máximo de 10MB',
-        ); */
         res.status(404).send('El archivo excede el tamaño máximo de 10MB');
         return;
       }
@@ -69,19 +58,12 @@ export class DocumentpdfService {
 
       try {
         fs.writeFileSync(destinationPath, file.buffer);
-        console.log(`PDF guardado en: ${destinationPath}`);
-
         const numero = this.obtenerParteNumerica(textToReplace);
         const isAEV = textToReplace.includes('-AEV');
 
         if (isAEV) {
           await this.actualizarRegistroEnBaseDeDatos(numero);
-          console.log('a qui aev');
         } else {
-          console.log('a qui busa');
-          const dateTime = this.obtenerFechaYHoraActualSQL();
-          console.log('a qui busa', dateTime);
-
           await this.actualizarRegistroEnBaseDeDatosBUSA(numero);
         }
         res.status(200).send('PDF guardado exitosamente');
@@ -105,58 +87,68 @@ export class DocumentpdfService {
   }
 
   obtenerParteNumerica(texto: string): string {
-    const numerosEncontrados = texto.match(/\d+/); // Expresión regular para encontrar dígitos
+    const numerosEncontrados = texto.match(/\d+/);
     if (numerosEncontrados) {
-      return numerosEncontrados[0]; // Devuelve la primera coincidencia encontrada
+      return numerosEncontrados[0];
     }
-    return ''; // En caso de no encontrar números, se devuelve una cadena vacía
+    return '';
   }
 
   async actualizarRegistroEnBaseDeDatos(numero: string): Promise<void> {
-    // Aquí ejecutas el UPDATE en tu base de datos utilizando el número recibido
     try {
       const sql = `
         UPDATE desembolsos
         SET archivo = '${numero}'
         WHERE id = '${numero}';
       `;
-
       await this.connection.query(sql);
     } catch (error) {
-      throw new Error(
-        'Error al ejecutar la consulta SQL para actualizar el registro',
-      );
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (actualizarRegistroEnBaseDeDatos) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (actualizarRegistroEnBaseDeDatos) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (actualizarRegistroEnBaseDeDatos): ${error}`,
+          message: `Error del Servidor en (actualizarRegistroEnBaseDeDatos): ${error}`,
+        });
+      }
     }
   }
-  async actualizarRegistroEnBaseDeDatosBUSA(
-    numero: string,
-    // dateTime: string,
-  ): Promise<void> {
-    // Aquí ejecutas el UPDATE en tu base de datos utilizando el número recibido
+  async actualizarRegistroEnBaseDeDatosBUSA(numero: string): Promise<void> {
     try {
-      /* const sql = `
-        UPDATE desembolsos
-        SET archivo_busa = '${numero}',
-        fecha_busa = '${dateTime}'
-        WHERE id = '${numero}';
-      `; */
       const sql = `
         UPDATE desembolsos
         SET archivo_busa = '${numero}'
         WHERE id = '${numero}';
       `;
-
       await this.connection.query(sql);
     } catch (error) {
-      throw new Error(
-        'Error al ejecutar la consulta SQL para actualizar el registro',
-      );
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (actualizarRegistroEnBaseDeDatosBUSA) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (actualizarRegistroEnBaseDeDatosBUSA) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (actualizarRegistroEnBaseDeDatosBUSA): ${error}`,
+          message: `Error del Servidor en (actualizarRegistroEnBaseDeDatosBUSA): ${error}`,
+        });
+      }
     }
   }
 
   async downloadFile(fileName: string, res: Response): Promise<void> {
     const filesDirectory = `/home/${this.namePc}/Documentos/`;
-    console.log('Valor de namePc:', this.namePc);
     try {
       const filesInDirectory = fs.readdirSync(filesDirectory);
 
@@ -194,13 +186,6 @@ export class DocumentpdfService {
       console.error('Error durante la descarga del archivo:', error);
       res.status(404).send('Error durante la descarga del archivo');
     }
-  }
-
-  private addSuffixToFileName(fileName: string, suffix: number): string {
-    const fileParts = fileName.split('.');
-    const fileBaseName = fileParts.slice(0, -1).join('.');
-    const fileExtension = fileParts[fileParts.length - 1];
-    return `${fileBaseName}(${suffix})${fileExtension}`;
   }
 
   private fileExists(filePath: string): Promise<boolean> {
@@ -270,11 +255,9 @@ export class DocumentpdfService {
       });
 
       fileStream.on('error', () => {
-        // console.error('Error al mostrar e  l archivo PDF:', error);
         res.status(404).send('Error al mostrar el archivo PDF');
       });
     } catch (error) {
-      // console.error('Error al mostrar el archivo PDF:', error);
       res.status(404).send('Error al mostrar el archivo PDF');
     }
   }
@@ -365,9 +348,7 @@ export class DocumentpdfService {
 
       const filePath = path.join(filesDirectory, matchingFile);
 
-      // Eliminar el archivo
       fs.unlinkSync(filePath);
-      console.log(`PDF eliminado: ${matchingFile}`);
 
       const numero = this.obtenerParteNumerica(textToMatch);
 
@@ -395,16 +376,12 @@ export class DocumentpdfService {
     try {
       let sql = '';
       if (campo === 'archivo') {
-        console.log('entro a aev');
-
         sql = `
           UPDATE desembolsos
           SET archivo = NULL
           WHERE id = '${isnum}';
         `;
       } else if (campo === 'archivo_busa') {
-        console.log('entro a busa');
-
         sql = `
           UPDATE desembolsos
           SET archivo_busa = NULL
@@ -482,24 +459,16 @@ export class DocumentpdfService {
         const dateTime = this.obtenerFechaYHoraActual();
         const uniqueName = await this.concatenarNombreConFechaHora(
           dateTime,
-          fileName, // Usar fileName en lugar de textToReplace
+          fileName,
         );
-        const destinationPath = `${filesDirectory}${uniqueName}`; // Generar la ruta con el nuevo nombre único
-
-        console.log('Ruta del archivo:', destinationPath); // Verificar la ruta del archivo
-        // Guardar el archivo PDF en la ruta especificada con el nuevo nombre único
+        const destinationPath = `${filesDirectory}${uniqueName}`;
         fs.writeFileSync(destinationPath, buffer);
-
-        console.log('Archivo guardado correctamente:', destinationPath);
-
-        console.log(`PDF guardado en: ${destinationPath}`);
 
         const numero = this.obtenerParteNumerica(fileName);
         const isAEV = fileName.includes('-AEV');
 
         if (isAEV) {
           await this.actualizarRegistroEnBaseDeDatos(numero);
-          console.log('a qui aev');
         } else {
           await this.actualizarRegistroEnBaseDeDatosBUSA(numero);
         }

@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotFoundException } from '@nestjs/common';
 import { Connection } from 'typeorm';
 
 import { Planillasigepro } from './entities/planillasigepro.entity';
@@ -16,21 +19,51 @@ export class PlanillasigeproService {
 
   async findAll(): Promise<Planillasigepro[]> {
     try {
-      return await this.planillasigeproRepository.find();
+      const planillasigepro = await this.planillasigeproRepository.find();
+      if (planillasigepro.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se encontraron Planillasigepro.`,
+          message: `No se encontraron Planillasigepro.`,
+        });
+      }
+      return planillasigepro;
     } catch (error) {
-      throw new Error('No se pudieron obtener las Planillasporcontrato.');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAll): ${error}`,
+          message: `Error del Servidor en (findAll): ${error}`,
+        });
+      }
     }
   }
 
   async findOne(id: number): Promise<Planillasigepro> {
-    const planillasigepro = await this.planillasigeproRepository.findOne({
-      where: { id },
-    });
-
-    if (!planillasigepro) {
-      throw new NotFoundException(`Planillasigepro con ID ${id} no encontrado`);
+    try {
+      const planillasigepro = await this.planillasigeproRepository.findOne({
+        where: { id },
+      });
+      if (!planillasigepro) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Planillasigepro con ID ${id} no encontrado`,
+          message: `Planillasigepro con ID ${id} no encontrado`,
+        });
+      }
+      return planillasigepro;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findOne): ${error}`,
+          message: `Error del Servidor en (findOne): ${error}`,
+        });
+      }
     }
-
-    return planillasigepro;
   }
 }

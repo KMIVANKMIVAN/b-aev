@@ -13,6 +13,10 @@ export class CuadroController {
   consultaBusa() {
     return this.cuadroService.consultaBusa();
   }
+  @Get('consultabusaaev')
+  consultaBusaAev() {
+    return this.cuadroService.consultaBusaAev();
+  }
   @Get('consultasipago/:codid')
   consultaSipago(@Param('codid') codid: string) {
     return this.cuadroService.consultaSipago(codid);

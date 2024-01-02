@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotFoundException } from '@nestjs/common';
 import { Connection } from 'typeorm';
 
 import { Desembolso } from './entities/desembolso.entity';
@@ -16,9 +19,25 @@ export class DesembolsosService {
 
   async findAll(): Promise<Desembolso[]> {
     try {
-      return await this.desembolsoRepository.find();
+      const desembolsos = await this.desembolsoRepository.find();
+      if (desembolsos.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se encontraron desembolsos.`,
+          message: `No se encontraron desembolsos.`,
+        });
+      }
+      return desembolsos;
     } catch (error) {
-      throw new Error('No se pudieron obtener los Desembolso.');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAll): ${error}`,
+          message: `Error del Servidor en (findAll): ${error}`,
+        });
+      }
     }
   }
   async desenbolsoetapas(): Promise<Desembolso[]> {
@@ -40,19 +59,47 @@ export class DesembolsosService {
 
       return await queryBuilder.getRawMany();
     } catch (error) {
-      throw new Error('No se pudieron obtener los Desembolso.');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (desenbolsoetapas) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (desenbolsoetapas) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (desenbolsoetapas): ${error}`,
+          message: `Error del Servidor en (desenbolsoetapas): ${error}`,
+        });
+      }
     }
   }
 
   async findOne(id: number): Promise<Desembolso> {
-    const desembolso = await this.desembolsoRepository.findOne({
-      where: { id },
-    });
-
-    if (!desembolso) {
-      throw new NotFoundException(`Desembolso con ID ${id} no encontrado`);
+    try {
+      const desembolso = await this.desembolsoRepository.findOne({
+        where: { id },
+      });
+      if (!desembolso) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Desembolso con ID ${id} no encontrado NO Existe`,
+          message: `Desembolso con ID ${id} no encontrado`,
+        });
+      }
+      return desembolso;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findOne): ${error}`,
+          message: `Error del Servidor en (findOne): ${error}`,
+        });
+      }
     }
-
-    return desembolso;
   }
 }
