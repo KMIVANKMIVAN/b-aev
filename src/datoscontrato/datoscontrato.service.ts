@@ -23,6 +23,7 @@ export class DatoscontratoService {
     private configService: ConfigService,
   ) {}
   namePc = this.configService.get<string>('NAMEPC');
+  fechaInicio = this.configService.get<string>('FECHAINICIO');
 
   findAll(): Promise<Datoscontrato[]> {
     const url = 'http://sitahu.aevivienda.gob.bo/ServicioWeb/vigente/4760619';
@@ -170,7 +171,7 @@ export class DatoscontratoService {
 
   async findOneContCodCompleja(contcod: string): Promise<any> {
     try {
-      const datosContCod = await this.findOneContCod(contcod);
+      /* const datosContCod = await this.findOneContCod(contcod);
       if (datosContCod !== null && datosContCod !== undefined) {
         const sql = `
           SELECT 
@@ -212,7 +213,83 @@ export class DatoscontratoService {
             message: `Vivienda Nueva con ${contcod} no fueron encontrados`,
           });
         }
-        return resultWithButtons;
+        return resultWithButtons; */
+      /* const datosContCod = await this.findOneContCod(contcod);
+      if (datosContCod !== null && datosContCod !== undefined) {
+        const sql = `
+        SELECT 
+    *,
+    d.id AS iddesem,
+    DATE_FORMAT(d.fecha_generado, '%d/%m/%Y') AS fechagenerado,
+    DATE_FORMAT(d.fecha_banco, '%d/%m/%Y') AS fechabanco,
+    d.monto_desembolsado,
+    d.id,
+    tp.detalle,
+    tc.titular,
+    tc.cuentatitular,
+    CASE 
+        WHEN (d.fecha_banco IS NULL OR d.fecha_banco = '' OR STR_TO_DATE(d.fecha_banco, '%Y-%m-%d') >= '2023-12-27') THEN 0
+        ELSE 1
+    END AS buttonAEV,
+    CASE 
+        WHEN (d.fecha_busa IS NULL OR d.fecha_busa = '' OR STR_TO_DATE(d.fecha_busa, '%Y-%m-%d') >= '2023-12-27') THEN 0
+        ELSE 1
+    END AS buttonBUSA
+FROM desembolsos d
+INNER JOIN etapas e ON d.estado = e.id
+LEFT JOIN tipoplanillas tp ON d.tipo_planilla = tp.id
+LEFT JOIN titularcuenta tc ON d.idcuenta = tc.id 
+WHERE d.estado = 6
+          AND d.cont_cod = ?
+        `;
+        const result = await this.connection.query(sql, [contcod]);
+
+        if (result.length === 0) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: `Vivienda Nueva con ${contcod} NO Existe`,
+            message: `Vivienda Nueva con ${contcod} no fueron encontrados`,
+          });
+        }
+        return result; */
+      const datosContCod = await this.findOneContCod(contcod);
+      if (datosContCod !== null && datosContCod !== undefined) {
+        const sql = `
+        SELECT 
+    *,
+    d.id AS iddesem,
+    DATE_FORMAT(d.fecha_generado, '%d/%m/%Y') AS fechagenerado,
+    DATE_FORMAT(d.fecha_banco, '%d/%m/%Y') AS fechabanco,
+    d.monto_desembolsado,
+    d.id,
+    tp.detalle,
+    tc.titular,
+    tc.cuentatitular,
+    CASE 
+        WHEN (d.fecha_banco IS NULL OR d.fecha_banco = '' OR STR_TO_DATE(d.fecha_insert, '%Y-%m-%d') >= '${this.fechaInicio}') THEN 0
+        ELSE 1
+    END AS buttonAEV,
+    CASE 
+        WHEN ((d.fecha_busa IS NULL OR d.fecha_busa = '') AND (STR_TO_DATE(d.fecha_insert, '%Y-%m-%d') < '${this.fechaInicio}')) OR (STR_TO_DATE(d.fecha_insert, '%Y-%m-%d') < '${this.fechaInicio}') THEN 1
+        ELSE 0
+    END AS buttonBUSA
+FROM desembolsos d
+INNER JOIN etapas e ON d.estado = e.id
+LEFT JOIN tipoplanillas tp ON d.tipo_planilla = tp.id
+LEFT JOIN titularcuenta tc ON d.idcuenta = tc.id 
+WHERE d.estado = 6
+    AND d.cont_cod = ?
+        `;
+        const result = await this.connection.query(sql, [contcod]);
+
+        if (result.length === 0) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: `Vivienda Nueva con ${contcod} NO Existe`,
+            message: `Vivienda Nueva con ${contcod} no fueron encontrados`,
+          });
+        }
+        return result;
       } else {
         throw new BadRequestException({
           statusCode: 400,
@@ -270,6 +347,44 @@ export class DatoscontratoService {
           message: `Número no tiene el formato adecuados`,
         });
       }
+      /* const idnum = numero;
+      let fechaBanco: string | null = null;
+
+      if (numero.includes('-AEV')) {
+        const sql = `SELECT d.fecha_banco FROM desembolsos d WHERE d.id = '${idnum}'`;
+        const result = await this.connection.query(sql);
+        if (result.length === 0) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: `No se pudieron obtener datos para el codigo: ${numero}`,
+            message: `No se pudieron obtener datos para el codigo: ${numero}`,
+          });
+        }
+        fechaBanco = result[0].fecha_banco;
+      } else if (numero.includes('-BUSA')) {
+        const sql = `SELECT d.fecha_busa FROM desembolsos d WHERE d.id = '${idnum}'`;
+        const result = await this.connection.query(sql);
+        if (result.length === 0) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: `No se pudieron obtener datos para el codigo: ${numero}`,
+            message: `No se pudieron obtener datos para el codigo: ${numero}`,
+          });
+        }
+        fechaBanco = result[0].fecha_busa;
+      } else {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Número no tiene el formato adecuado`,
+          message: `Número no tiene el formato adecuados`,
+        });
+      }
+      if (fechaBanco === null) {
+        return true; // Si fechaBanco es null, devolver true
+      } else {
+        // Verificar si la fecha es mayor o igual a fechaInicio
+        return new Date(fechaBanco) >= new Date(this.fechaInicio);
+      } */
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;

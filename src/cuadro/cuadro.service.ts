@@ -144,21 +144,22 @@ export class CuadroService {
       d.fecha_busa,
       d.archivo_busa,
       d.fecha_abono 
-  FROM sipago.desembolsos d,
+      FROM sipago.desembolsos d,
       cuadro.proyectosexcel p,
       cuadro.tipo t,
       sipago.titularcuenta c
-  WHERE d.proyecto_id = p.id
+      WHERE d.proyecto_id = p.id
       AND p.idTipo = t.idTipo
       AND d.idcuenta = c.id
       AND d.estado = 6
       AND NOT ISNULL(d.archivo)
       AND NOT ISNULL(d.fecha_banco)
-      AND d.fecha_insert >= ${this.fechainicio}
-      AND ISNULL(d.fecha_busa) 
-      AND ISNULL(d.archivo_busa)
-  LIMIT 100;  
+AND d.fecha_insert>= '${this.fechainicio}'
+AND  ISNULL(d.fecha_busa) 
+AND  ISNULL(d.archivo_busa)
+limit 100
       `;
+      // this.fechainicio;
       const result = await this.connection.query(sql);
       if (result.length === 0) {
         throw new BadRequestException({
@@ -190,40 +191,40 @@ export class CuadroService {
     try {
       const sql = `
       SELECT
-      p.id AS id_proyecto,
-      p.num AS codigo,
-      p.proyecto_nombre AS nombre_proyecto,
-      t.tipo AS tipo,
-      d.id AS id_desembolso,
-      d.cont_cod,
-      d.monto_fisico,
-      d.descuento_anti_reten,
-      d.multa,
-      d.monto_desembolsado,
-      d.idcuenta,
-      c.titular,
-      c.cuentatitular,
-      d.estado,
-      d.numero_inst,
-      d.numero_factura,
-      d.fecha_insert,
-      d.objeto,
-      d.fecha_banco,
-      d.archivo,
-      d.fecha_busa,
-      d.archivo_busa,
-      d.fecha_abono 
-  FROM sipago.desembolsos d,
-      cuadro.proyectosexcel p,
-      cuadro.tipo t,
-      sipago.titularcuenta c
-  WHERE d.proyecto_id = p.id
-      AND p.idTipo = t.idTipo
-      AND d.idcuenta = c.id
-      AND d.estado = 6
-      AND NOT ISNULL(d.archivo)
-      AND NOT ISNULL(d.fecha_banco)
-      AND d.fecha_insert >= ${this.fechainicio}
+p.id AS id_proyecto,
+p.num AS codigo,
+p.proyecto_nombre AS nombre_proyecto,
+t.tipo AS tipo,
+d.id AS id_desembolso,
+d.cont_cod,
+d.monto_fisico,
+d.descuento_anti_reten,
+d.multa,
+d.monto_desembolsado,
+d.idcuenta,
+c.titular,
+c.cuentatitular,
+d.estado,
+d.numero_inst,
+d.numero_factura,
+d.fecha_insert,
+d.objeto,
+d.fecha_banco,
+d.archivo,
+d.fecha_busa,
+d.archivo_busa,
+d.fecha_abono 
+FROM sipago.desembolsos d,
+cuadro.proyectosexcel p,
+cuadro.tipo t,
+sipago.titularcuenta c
+WHERE d.proyecto_id = p.id
+AND p.idTipo = t.idTipo
+AND d.idcuenta = c.id
+AND d.estado = 6
+AND NOT ISNULL(d.archivo)
+AND NOT ISNULL(d.fecha_banco)
+      AND d.fecha_insert >= '${this.fechainicio}'
       AND NOT ISNULL(d.fecha_busa) 
       AND NOT ISNULL(d.archivo_busa)
       `;
@@ -231,8 +232,8 @@ export class CuadroService {
       if (result.length === 0) {
         throw new BadRequestException({
           statusCode: 400,
-          error: `No se encontraron datos para la fecha seleccionada 2023-12-01`,
-          message: `No se encontraron datos para la fecha seleccionada 2023-12-01`,
+          error: `No se encontraron datos para la fecha seleccionada ${this.fechainicio}`,
+          message: `No se encontraron datos para la fecha seleccionada ${this.fechainicio}`,
         });
       }
       return result;
@@ -256,7 +257,7 @@ export class CuadroService {
   }
   async consultaSipago(codid: string): Promise<Cuadro[]> {
     try {
-      const sql = `
+      /* const sql = `
         SELECT tp.detalle,tp.id as idtipo,e.etapa,DATE_FORMAT(d.fecha_generado,'%d/%m/%Y') as fechagenerado,DATE_FORMAT(d.fecha_banco,'%d/%m/%Y') as fechabanco,d.*
         FROM desembolsos d
         INNER JOIN tipoplanillas tp ON d.tipo_planilla = tp.id
@@ -265,6 +266,30 @@ export class CuadroService {
         AND d.estado = 6
         AND d.activo = 1
         ORDER BY d.id desc
+      `; */
+      /* const sql = `
+      SELECT 
+      tp.detalle,
+      tp.id AS idtipo,
+      e.etapa,
+      DATE_FORMAT(d.fecha_generado, '%d/%m/%Y') AS fechagenerado,
+      DATE_FORMAT(d.fecha_banco, '%d/%m/%Y') AS fechabanco,
+      d.*,
+      CASE 
+          WHEN (d.fecha_banco IS NULL OR d.fecha_banco = '' OR STR_TO_DATE(d.fecha_banco, '%Y-%m-%d') >= '2023-12-27') THEN 0
+          ELSE 1
+      END AS buttonAEV,
+      CASE 
+          WHEN (d.fecha_busa IS NULL OR d.fecha_busa = '' OR STR_TO_DATE(d.fecha_busa, '%Y-%m-%d') >= '2023-12-27') THEN 0
+          ELSE 1
+      END AS buttonBUSA
+  FROM desembolsos d
+  INNER JOIN tipoplanillas tp ON d.tipo_planilla = tp.id
+  INNER JOIN etapas e ON d.estado = e.id
+  WHERE d.proyecto_id = ${codid} 
+      AND d.estado = 6
+      AND d.activo = 1
+  ORDER BY d.id DESC;  
       `;
       const result = await this.connection.query(sql);
       if (result.length === 0) {
@@ -274,7 +299,43 @@ export class CuadroService {
           message: `No se encontraron datos para el codigo: ${codid} sin datos`,
         });
       }
-      const ids = result.map((data: any) => data.id);
+      return result; */
+      const sql = `
+      SELECT 
+    tp.detalle,
+    tp.id AS idtipo,
+    e.etapa,
+    DATE_FORMAT(d.fecha_generado, '%d/%m/%Y') AS fechagenerado,
+    DATE_FORMAT(d.fecha_banco, '%d/%m/%Y') AS fechabanco,
+    d.*,
+    CASE 
+        WHEN (d.fecha_banco IS NULL OR d.fecha_banco = '' OR STR_TO_DATE(d.fecha_insert, '%Y-%m-%d') >= '${this.fechainicio}') THEN 0
+        ELSE 1
+    END AS buttonAEV,
+    CASE 
+        WHEN ((d.fecha_busa IS NULL OR d.fecha_busa = '') AND (STR_TO_DATE(d.fecha_insert, '%Y-%m-%d') < '${this.fechainicio}')) OR (STR_TO_DATE(d.fecha_busa, '%Y-%m-%d') < '${this.fechainicio}') THEN 1
+        ELSE 0
+    END AS buttonBUSA
+FROM desembolsos d
+INNER JOIN tipoplanillas tp ON d.tipo_planilla = tp.id
+INNER JOIN etapas e ON d.estado = e.id
+  WHERE d.proyecto_id = ${codid} 
+      AND d.estado = 6
+      AND d.activo = 1
+  ORDER BY d.id DESC;  
+      `;
+
+      const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se encontraron datos para el codigo: ${codid}`,
+          message: `No se encontraron datos para el codigo: ${codid} sin datos`,
+        });
+      }
+      return result;
+
+      /* const ids = result.map((data: any) => data.id);
 
       const buttonAEVResponses = await Promise.all(
         ids.map((id: string) => this.verificarEnvioBanco(`${id}-AEV`)),
@@ -291,7 +352,7 @@ export class CuadroService {
         };
       });
 
-      return resultWithButtons;
+      return resultWithButtons; */
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -341,6 +402,44 @@ export class CuadroService {
           message: `Número no tiene el formato adecuados`,
         });
       }
+      /* const idnum = numero;
+      let fechaBanco: string | null = null;
+
+      if (numero.includes('-AEV')) {
+        const sql = `SELECT d.fecha_banco FROM desembolsos d WHERE d.id = '${idnum}'`;
+        const result = await this.connection.query(sql);
+        if (result.length === 0) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: `No se pudieron obtener datos para el codigo: ${numero}`,
+            message: `No se pudieron obtener datos para el codigo: ${numero}`,
+          });
+        }
+        fechaBanco = result[0].fecha_banco;
+      } else if (numero.includes('-BUSA')) {
+        const sql = `SELECT d.fecha_busa FROM desembolsos d WHERE d.id = '${idnum}'`;
+        const result = await this.connection.query(sql);
+        if (result.length === 0) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: `No se pudieron obtener datos para el codigo: ${numero}`,
+            message: `No se pudieron obtener datos para el codigo: ${numero}`,
+          });
+        }
+        fechaBanco = result[0].fecha_busa;
+      } else {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Número no tiene el formato adecuado`,
+          message: `Número no tiene el formato adecuados`,
+        });
+      }
+      if (fechaBanco === null) {
+        return true; // Si fechaBanco es null, devolver true
+      } else {
+        // Verificar si la fecha es mayor o igual a fechaInicio
+        return new Date(fechaBanco) >= new Date(this.fechainicio);
+      } */
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
