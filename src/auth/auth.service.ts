@@ -51,6 +51,7 @@ export class AuthService {
         username: user.username,
         nivel: user.nivel,
         prioridad: user.prioridad,
+        // departamento: user.departamento,
       };
 
       return {

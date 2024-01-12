@@ -39,6 +39,7 @@ import { TipoRespaldoModule } from './tipo_respaldo/tipo_respaldo.module';
 //////cuadro
 
 import { CuadroModule } from './cuadro/cuadro.module';
+import { ProyectosModule } from './proyectos/proyectos.module';
 
 @Module({
   imports: [
@@ -188,6 +189,7 @@ import { CuadroModule } from './cuadro/cuadro.module';
       }),
     }),
     CuadroModule,
+    ProyectosModule,
   ],
   controllers: [AppController],
   providers: [AppService],
