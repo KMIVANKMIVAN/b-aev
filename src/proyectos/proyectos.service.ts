@@ -23,15 +23,27 @@ export class ProyectosService {
       let sql: string;
       if (iddepartuser[0].id === 10 || iddepartuser[0].id === 11) {
         sql = `
-        SELECT proyecto_nombre, id, idTipo, departamento 
-        FROM cuadro.proyectosexcel 
-        WHERE num LIKE '%${contcod}%'
+        SELECT p.id, p.num, p.proyecto_nombre, p.idTipo, t.tipo, p.departamento, d.departamento  
+        FROM cuadro.proyectosexcel p,
+        cuadro.tipo t,
+        cuadro.departamentos d 
+        WHERE p.idTipo = t.idTipo
+        and p.departamento = d.id
+        and num LIKE '%${contcod}%'
+        and activo = 1
         `;
       } else {
         sql = `
-        SELECT proyecto_nombre, id, idTipo, departamento 
-        FROM cuadro.proyectosexcel 
-        WHERE num LIKE '%${contcod}%' AND departamento = '${iddepartuser[0].id}'
+        SELECT p.id, p.num, p.proyecto_nombre, p.idTipo, t.tipo, p.departamento, d.departamento  
+        FROM cuadro.proyectosexcel p,
+        cuadro.tipo t,
+        cuadro.departamentos d 
+        WHERE p.idTipo = t.idTipo
+        and p.departamento = d.id
+        and num LIKE '%${contcod}%'
+        AND p.departamento = '${iddepartuser[0].id}'
+        and activo = 1
+
         `;
       }
       const result = await this.connection.query(sql);
