@@ -33,7 +33,7 @@ export class RolesUsersController {
   findOne(@Param('id') user_id: number) {
     return this.rolesUsersService.findOne(user_id);
   }
-
+  @UseGuards(AuthGuard)
   @Patch(':id')
   update(
     @Param('id') user_id: number,

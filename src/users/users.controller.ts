@@ -51,6 +51,11 @@ export class UsersController {
     return this.usersService.buscarUsuarios(buscar);
   }
   @UseGuards(AuthGuard)
+  @Get('/buscarusuario/:buscar')
+  buscarUsuariosNombres(@Param('buscar') buscar: string) {
+    return this.usersService.buscarUsuariosNombres(buscar);
+  }
+  @UseGuards(AuthGuard)
   @Patch('updatepassword/:id/:antiguop')
   updatePassword(
     @Param('id') id: string,

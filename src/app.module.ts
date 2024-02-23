@@ -19,6 +19,10 @@ import { Desembolso } from './desembolsos/entities/desembolso.entity';
 import { Etapa } from './etapas/entities/etapa.entity';
 import { RespaldoDesembolso } from './respaldo_desembolsos/entities/respaldo_desembolso.entity';
 import { TipoRespaldo } from './tipo_respaldo/entities/tipo_respaldo.entity';
+
+import { Derivacion } from './derivacion/entities/derivacion.entity';
+import { Firmador } from './firmador/entities/firmador.entity';
+
 //////cuadro
 
 // import {  } from './';
@@ -36,10 +40,13 @@ import { DesembolsosModule } from './desembolsos/desembolsos.module';
 import { EtapasModule } from './etapas/etapas.module';
 import { RespaldoDesembolsosModule } from './respaldo_desembolsos/respaldo_desembolsos.module';
 import { TipoRespaldoModule } from './tipo_respaldo/tipo_respaldo.module';
+import { DerivacionModule } from './derivacion/derivacion.module';
+import { FirmadorModule } from './firmador/firmador.module';
 //////cuadro
 
 import { CuadroModule } from './cuadro/cuadro.module';
 import { ProyectosModule } from './proyectos/proyectos.module';
+
 
 @Module({
   imports: [
@@ -62,6 +69,8 @@ import { ProyectosModule } from './proyectos/proyectos.module';
     AuthModule,
     RespaldoDesembolsosModule,
     TipoRespaldoModule,
+    DerivacionModule,
+    FirmadorModule,
 
     /* TypeOrmModule.forRoot({
       logging: true,
@@ -160,6 +169,8 @@ import { ProyectosModule } from './proyectos/proyectos.module';
           Etapa,
           RespaldoDesembolso,
           TipoRespaldo,
+          Derivacion,
+          Firmador,
         ],
         synchronize: false,
         multipleStatements: true,

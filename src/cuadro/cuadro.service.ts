@@ -17,9 +17,9 @@ export class CuadroService {
     private readonly CuadroRepository: Repository<Cuadro>,
     private connection: Connection,
     private configService: ConfigService,
-  ) {}
+  ) { }
   fechainicio = this.configService.get<string>('FECHAINICIO');
-
+  //--AND p.idTipo IN (5, 11, 13, 2, 15, 17, 18)
   async consultaCuadro(contcod: string): Promise<Cuadro[]> {
     try {
       const sql = `
@@ -86,7 +86,105 @@ export class CuadroService {
       cuadro.estructuracostos ec ON p.id = ec.proyecto_id
   WHERE
       p.activo = 1
-      AND p.idTipo IN (5, 11, 13, 2, 15, 17, 18)
+      
+      AND p.idTipo IN (5, 11, 13, 17, 15, 18)
+      AND (p.num LIKE '%${contcod}%' OR p.proyecto_nombre LIKE '%${contcod}%')
+  LIMIT 4;
+      `;
+      const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se encontraron datos para el código ${contcod}`,
+          message: `No se encontraron datos para el código ${contcod} sin datos`,
+        });
+      }
+      return result;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (consultaCuadro) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (consultaCuadro) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (consultaCuadro): ${error}`,
+          message: `Error del Servidor en (consultaCuadro): ${error}`,
+        });
+      }
+    }
+  }
+  async consultaCuadroVivienda(contcod: string): Promise<Cuadro[]> {
+    try {
+      const sql = `
+      SELECT
+      p.id,
+      p.gestion,
+      p.num,
+      p.codigo_sap,
+      p.proyecto_nombre,
+      e.estado,
+      a.actividad,
+      d.departamento,
+      p.provincia,
+      p.municipio,
+      p.comunidades,
+      t.tipo,
+      m.modalidad,
+      p.plan_plurianual,
+      p.gestion,
+      p.empresa_adjudicada,
+      p.fecha_orden_proceder,
+      p.plazo_ejecucion,
+      p.ampliacion_plazo,
+      DATE_ADD(p.fecha_orden_proceder, INTERVAL (p.plazo_ejecucion + p.ampliacion_plazo) DAY) as fecha_ent_provisional,
+      p.fecha_entrega_definitiva,
+      p.uh_programado as uh_proy,
+      f.nombre_fiscal,
+      p.pueblo_indigena,
+      p.descripcion_obra,
+      p.observaciones,
+      p.costo_proyecto,
+      p.monto_con_aev,
+      p.monto_cont_modificatorio,
+      p.monto_con_benef,
+      p.por_con_benef,
+      p.monto_sup_aev,
+      p.monto_fin_aev,
+      p.monto_total_proyecto,
+      p.monto_con_muni,
+      p.monto_con_sectorial,
+      p.monto_total_concurrencia,
+      p.empresa_sup,
+      p.nombre_sup,
+      p.monto_contrato_sup,
+      p.avance_fisico_obra,
+      p.fecha_contrato,
+      ec.monto_aevivienda as monto_contrato_aevivienda,
+      p.sigepro_id
+  FROM
+      cuadro.proyectosexcel p
+  INNER JOIN
+      cuadro.departamentos d ON p.departamento = d.id
+  INNER JOIN
+      cuadro.estados e ON p.estado = e.idEstado
+  INNER JOIN
+      cuadro.tb_actividades a ON p.actividad = a.idActividad
+  INNER JOIN
+      cuadro.tipo t ON p.idTipo = t.idTipo
+  INNER JOIN
+      cuadro.modalidades m ON p.modalidad = m.id
+  INNER JOIN
+      cuadro.fiscales f ON p.fiscal = f.id
+  LEFT JOIN
+      cuadro.estructuracostos ec ON p.id = ec.proyecto_id
+  WHERE
+      p.activo = 1
+      AND p.idTipo IN (1, 2, 10, 14, 19, 3, 4, 16, 9)
       AND (p.num LIKE '%${contcod}%' OR p.proyecto_nombre LIKE '%${contcod}%')
   LIMIT 4;
       `;
@@ -187,8 +285,15 @@ limit 100
       }
     }
   }
-  async consultaBusaAev(): Promise<Cuadro[]> {
+  async consultaBusaAev(
+    fechaInicioC: string,
+    fechaFinc: string,
+  ): Promise<Cuadro[]> {
     try {
+      let fechaIf = fechaInicioC;
+      if (fechaInicioC < this.fechainicio) {
+        fechaIf = this.fechainicio;
+      }
       const sql = `
       SELECT
 p.id AS id_proyecto,
@@ -224,7 +329,8 @@ AND d.idcuenta = c.id
 AND d.estado = 6
 AND NOT ISNULL(d.archivo)
 AND NOT ISNULL(d.fecha_banco)
-      AND d.fecha_insert >= '${this.fechainicio}'
+      AND d.fecha_insert >= '${fechaIf}'
+    AND d.fecha_insert <= '${fechaFinc}'
       AND NOT ISNULL(d.fecha_busa) 
       AND NOT ISNULL(d.archivo_busa)
       `;

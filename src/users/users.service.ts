@@ -22,7 +22,7 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
     private readonly rolesUsersService: RolesUsersService,
     private connection: Connection,
-  ) {}
+  ) { }
 
   async create(nivel: number, createUserDto: CreateUserDto): Promise<User> {
     try {
@@ -210,6 +210,42 @@ export class UsersService {
         SELECT * FROM (
           SELECT * FROM users
           WHERE username LIKE '%${buscar}%' OR cedula_identidad LIKE '%${buscar}%'
+          ) AS resultados
+          LIMIT 5;
+      `;
+      const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El Usuario ${buscar} NO Existe`,
+          message: `Usuario ${buscar} no fue encontrado`,
+        });
+      }
+      return result;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarUsuarios) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (buscarUsuarios) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarUsuarios): ${error}`,
+          message: `Error del Servidor en (buscarUsuarios): ${error}`,
+        });
+      }
+    }
+  }
+  async buscarUsuariosNombres(buscar: string): Promise<User[]> {
+    try {
+      const sql = `
+        SELECT * FROM (
+          SELECT * FROM users
+          WHERE nombre LIKE '%${buscar}%' OR cedula_identidad LIKE '%${buscar}%'
           ) AS resultados
           LIMIT 5;
       `;

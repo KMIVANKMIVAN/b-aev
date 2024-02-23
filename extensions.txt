@@ -1,0 +1,15 @@
+ashinzekene.nestjs
+bradlc.vscode-tailwindcss
+dbaeumer.vscode-eslint
+dsznajder.es7-react-js-snippets
+esbenp.prettier-vscode
+formulahendry.auto-rename-tag
+formulahendry.code-runner
+liubailin.andromeda84-vscode
+MS-CEINTL.vscode-language-pack-es
+rafamel.subtle-brackets
+RapidAPI.vscode-rapidapi-client
+rapidapi.vscode-services
+ritwickdey.LiveServer
+RobbOwen.synthwave-vscode
+SirTori.indenticator

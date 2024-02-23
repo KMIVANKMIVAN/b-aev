@@ -82,7 +82,7 @@ export class RespaldoDesembolsosController {
   findOne(@Param('id') id: number) {
     return this.respaldoDesembolsosService.findOne(+id);
   }
-
+  @UseGuards(AuthGuard)
   @Patch(':id')
   update(
     @Param('id') id: number,
