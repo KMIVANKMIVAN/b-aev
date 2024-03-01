@@ -88,9 +88,6 @@ export class FirmadorService {
     try {
       const existingFirmador = await this.findOne(id);
       const { ...rest } = updateFirmadorDto;
-      const updatedFirmador: Partial<Firmador> = {
-        ...rest,
-      };
       const updateResult = await this.firmadorRepository.update(id, updateFirmadorDto);
       if (updateResult.affected === 0) {
         throw new BadRequestException({
