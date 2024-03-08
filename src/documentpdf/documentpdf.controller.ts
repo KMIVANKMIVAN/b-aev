@@ -65,7 +65,7 @@ export class DocumentpdfController {
   buscarViviendaNueva(@Param('buscar') buscar: string) {
     return this.documentpdfService.buscarViviendaNueva(buscar);
   }
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   @Post('/base64apdf')
   async base64ToPdf(
     @Body('base64String') base64String: string,

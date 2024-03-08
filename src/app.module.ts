@@ -46,6 +46,8 @@ import { FirmadorModule } from './firmador/firmador.module';
 
 import { CuadroModule } from './cuadro/cuadro.module';
 import { ProyectosModule } from './proyectos/proyectos.module';
+import { GenerarPdfsModule } from './generar-pdfs/generar-pdfs.module';
+import { RecibirPdfsEnviarModule } from './recibir-pdfs-enviar/recibir-pdfs-enviar.module';
 
 
 @Module({
@@ -201,6 +203,8 @@ import { ProyectosModule } from './proyectos/proyectos.module';
     }),
     CuadroModule,
     ProyectosModule,
+    GenerarPdfsModule,
+    RecibirPdfsEnviarModule,
   ],
   controllers: [AppController],
   providers: [AppService],

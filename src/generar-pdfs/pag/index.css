@@ -1,0 +1,24 @@
+body {
+  font-family: Times New Roman, Times, serif; /* Especifica la fuente */
+  margin: 0;
+  padding: 0;
+}
+.pagina-a4 {
+  width: 21cm; /* Ancho de una página A4 */
+  /* width: 21cm; Ancho de una página A4 */
+  height: 29.7cm; /* Altura de una página A4 */
+  /* height: 29.7cm; Altura de una página A4 */
+  margin: auto; /* Centrar la página horizontalmente */
+  border: 1px solid black; /* Borde para simular los límites de la página */
+  /* padding: 2cm; Margen interior para simular el margen de impresión */
+  padding: 2cm; 
+}
+/* Estilos adicionales para el contenido */
+.contenido {
+  /* Estilos para el contenido, puedes personalizar según tus necesidades */
+}
+div {
+  text-align: center; /* Centrar el h2 */
+  color: yellowgreen;
+  background-color: aquamarine;
+}
