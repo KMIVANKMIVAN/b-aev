@@ -9,16 +9,28 @@ import { UsersService } from '../users/users.service';
 
 import * as crypto from 'crypto';
 
+import { ConsultasExternasService } from "../consultas-externas/consultas-externas.service";
+
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) {}
+    private consultasExternasService: ConsultasExternasService,
+  ) { }
 
   async signIn(username: string, password: string): Promise<any> {
     try {
       const user = await this.usersService.findOneNameUser(username);
+      /* const sitahu = await this.consultasExternasService.enviarSITAHU(user.cedulaIdentidad.toString());
+
+      if (sitahu.register === null) {
+        throw new BadRequestException({
+          statusCode: 401,
+          error: `Usuario ${username} NO ESTA HABILITADO al sistema`,
+          message: `Usuario ${username} NO ESTA HABILITADO al sistema`,
+        });
+      } */
 
       if (user.habilitado === 0) {
         throw new BadRequestException({
@@ -51,6 +63,7 @@ export class AuthService {
         username: user.username,
         nivel: user.nivel,
         prioridad: user.prioridad,
+        id_oficina: user.idOficina,
         // departamento: user.departamento,
       };
 

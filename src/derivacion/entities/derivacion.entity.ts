@@ -1,7 +1,7 @@
 // export class Derivacion {}
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity()
+@Entity('derivacion')
 export class Derivacion {
   @PrimaryGeneratedColumn()
   id: number;
@@ -22,16 +22,16 @@ export class Derivacion {
   observacion: string;
 
   @Column({ type: 'int' })
-  recibido: number;
-
-  @Column({ type: 'varchar', length: 255 })
-  estado: string;
+  estado: number;
 
   @Column({ type: 'int' })
   id_enviador: number;
 
   @Column({ type: 'int' })
   id_destinatario: number;
+
+  @Column({ type: 'varchar', length: 20 })
+  codigo_proyecto: string;
 
   @Column({ type: 'varchar', length: 100 })
   documento: string;

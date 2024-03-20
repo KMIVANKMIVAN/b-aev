@@ -1,7 +1,7 @@
 // export class Firmador {}
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity()
+@Entity('firmador')
 export class Firmador {
   @PrimaryGeneratedColumn()
   id: number;

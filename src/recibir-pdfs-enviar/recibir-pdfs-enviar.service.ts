@@ -126,6 +126,28 @@ export class RecibirPdfsEnviarService {
       throw new Error('Error al buscar PDFs para firmar');
     }
   }
+  async traerPDFFirmarBase64(nombreParcialPdf: string): Promise<{ nombrePdf: string, pdfBase64: string }> {
+    try {
+      const documentsPath = `/home/${this.namePc}/Documentos`;
+
+      // Busca archivos en el directorio
+      const files = fs.readdirSync(documentsPath);
+
+      // Filtra los archivos que coincidan con las primeras partes del nombre
+      const pdfFiles = files.filter((file) => file.startsWith(nombreParcialPdf));
+
+      if (pdfFiles.length > 0) {
+        const pdfPath = path.join(documentsPath, pdfFiles[0]);
+        const pdfBuffer = fs.readFileSync(pdfPath);
+        const pdfBase64 = pdfBuffer.toString('base64'); // Convierte el buffer a base64
+        return { nombrePdf: pdfFiles[0], pdfBase64 }; // Retorna el nombre del archivo y el PDF en base64
+      } else {
+        throw new Error('No se encontraron PDFs para firmar');
+      }
+    } catch (error) {
+      throw new Error('Error al buscar PDFs para firmar');
+    }
+  }
 
   async recibirBase64(base64Pdf: string): Promise<string> {
     try {
@@ -168,6 +190,49 @@ export class RecibirPdfsEnviarService {
     } catch (error) {
       console.error('Error al convertir Base64 a PDF:', error);
       res.status(404).send('Error durante la subida del archivo');
+    }
+  }
+
+  async base64ToPdfCarpeta(
+    base64String: string,
+    fileName: string,
+    res: Response,
+  ): Promise<void> {
+    try {
+      const filesDirectory = `/home/${this.namePc}/Documentos/`;
+      const folderName = `${fileName}PDF`;
+      const folderPath = path.join(filesDirectory, folderName);
+      const filePath = path.join(folderPath, `${fileName}.pdf`);
+
+      // Verificar si la carpeta ya existe
+      if (!fs.existsSync(folderPath)) {
+        fs.mkdirSync(folderPath);
+      } else {
+        // Verificar si el archivo ya existe
+        if (fs.existsSync(filePath)) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: `Ya se grabó el archivo ${fileName}`,
+            message: `No se pudo crear el archivo debido a que ya se grabó el archivo ${fileName}`,
+          });
+        }
+      }
+
+      const buffer = Buffer.from(base64String, 'base64');
+      fs.writeFileSync(filePath, buffer);
+
+      const nombrePDF = `${folderName}/${fileName}.pdf`;
+      res.status(200).json({ message: 'El Archivo se guardó Exitosamente', nombrePDF });
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (base64ToPdfCarpeta): ${error}`,
+          message: `Error del Servidor en (base64ToPdfCarpeta): ${error}`,
+        });
+      }
     }
   }
 

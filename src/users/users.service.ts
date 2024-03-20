@@ -204,6 +204,58 @@ export class UsersService {
       }
     }
   }
+  async buscarNomUsuarDepartemento(buscar: string, idofi: number): Promise<User[]> {
+    try {
+      const sql = `
+      SELECT
+          users.id,
+          users.username, 
+          users.nombre, 
+          users.cargo, 
+          users.nivel, 
+          departamento.departamento, 
+          departamento.acronimo
+        FROM
+          users
+          INNER JOIN
+          oficinas
+          ON 
+            users.id_oficina = oficinas.id
+          INNER JOIN
+          departamento
+          ON 
+            oficinas.departamento = departamento.id
+          WHERE nombre like '%${buscar}%'
+          AND users.id_oficina = ${idofi}
+          LIMIT 5;
+      `;
+      const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El Usuario ${buscar} con OFICINA: ${idofi} NO Existe`,
+          message: `Usuario ${buscar} con OFICINA: ${idofi} no fue encontrado`,
+        });
+      }
+      return result;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarNomUsuarDepartemento) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (buscarNomUsuarDepartemento) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarNomUsuarDepartemento): ${error}`,
+          message: `Error del Servidor en (buscarNomUsuarDepartemento): ${error}`,
+        });
+      }
+    }
+  }
   async buscarUsuarios(buscar: string): Promise<User[]> {
     try {
       const sql = `

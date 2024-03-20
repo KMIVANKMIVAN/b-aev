@@ -59,6 +59,17 @@ export class RecibirPdfsEnviarController {
     }
   }
 
+  @Get('traerpdffirmarbase/:nombreParcialPdf')
+  async getSignedPdfBase64(@Param('nombreParcialPdf') nombreParcialPdf: string, @Res() res: Response) {
+
+    const { nombrePdf, pdfBase64 } = await this.recibirPdfsEnviarService.traerPDFFirmarBase64(nombreParcialPdf);
+
+    // Ya tienes el PDF en base64, por lo que puedes devolverlo directamente
+    res.json({ nombrePdf, pdfBase64 });
+
+
+  }
+
   @Post('recibirbase')
   async recibirBase64(@Body() base64Pdf: string, @Res() res: Response) {
     try {
@@ -75,5 +86,14 @@ export class RecibirPdfsEnviarController {
     @Res() res: Response,
   ) {
     await this.recibirPdfsEnviarService.base64ToPdf(base64String, fileName, res);
+  }
+
+  @Post('/base64apdfcapeta')
+  async base64ToPdfCarpeta(
+    @Body('base64String') base64String: string,
+    @Body('fileName') fileName: string,
+    @Res() res: Response,
+  ) {
+    await this.recibirPdfsEnviarService.base64ToPdfCarpeta(base64String, fileName, res);
   }
 }

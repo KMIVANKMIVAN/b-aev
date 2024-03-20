@@ -1,26 +1,23 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { CreateFirmadorDto } from './dto/create-firmador.dto';
-import { UpdateFirmadorDto } from './dto/update-firmador.dto';
-import { Firmador } from './entities/firmador.entity';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { CreateEstadoDto } from './dto/create-estado.dto';
+import { UpdateEstadoDto } from './dto/update-estado.dto';
+import { Estado } from './entities/estado.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 
 @Injectable()
-export class FirmadorService {
+export class EstadoService {
   constructor(
-    @InjectRepository(Firmador)
-    private readonly firmadorRepository: Repository<Firmador>,
+    @InjectRepository(Estado)
+    private readonly estadoRepository: Repository<Estado>,
   ) { }
 
-  async create(createFirmadorDto: CreateFirmadorDto): Promise<Firmador> {
-
+  async create(createEstadoDto: CreateEstadoDto): Promise<Estado> {
     try {
-      const newFirmador = this.firmadorRepository.create(createFirmadorDto);
-      return await this.firmadorRepository.save(newFirmador);
+      const newEstado = this.estadoRepository.create(createEstadoDto);
+      return await this.estadoRepository.save(newEstado);
     } catch (error) {
       if (error instanceof BadRequestException) {
-        throw error;
-      } else if (error instanceof UnauthorizedException) {
         throw error;
       } else {
         throw new InternalServerErrorException({
@@ -30,20 +27,19 @@ export class FirmadorService {
         });
       }
     }
-
   }
 
-  async findAll(): Promise<Firmador[]> {
+  async findAll(): Promise<Estado[]> {
     try {
-      const firmador = await this.firmadorRepository.find();
-      if (firmador.length === 0) {
+      const estados = await this.estadoRepository.find();
+      if (estados.length === 0) {
         throw new BadRequestException({
           statusCode: 400,
-          error: `No se encontraron firmador.`,
-          message: `No se encontraron firmador.`,
+          error: `No se encontraron estados.`,
+          message: `No se encontraron estados.`,
         });
       }
-      return firmador;
+      return estados;
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -57,14 +53,17 @@ export class FirmadorService {
     }
   }
 
-  async findAllDepartamento(): Promise<Firmador[]> {
+  async menosEnviado(): Promise<Estado[]> {
     try {
-      // Modificamos la consulta para buscar todas las coincidencias donde el valor de la columna "departamento" sea 1
-      const firmadores = await this.firmadorRepository.find({ where: { departamental: 1 } });
-
-      // No necesitamos verificar si no se encontraron resultados porque si no se encuentran, simplemente firmadores será un array vacío.
-
-      return firmadores;
+      const estados = await this.estadoRepository.find({ where: { id: Not(1) } });
+      if (estados.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se encontraron estados con ID diferente de 1.`,
+          message: `No se encontraron estados con ID diferente de 1.`,
+        });
+      }
+      return estados;
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -79,17 +78,17 @@ export class FirmadorService {
   }
 
 
-  async findOne(id: number): Promise<Firmador> {
+  async findOne(id: number): Promise<Estado> {
     try {
-      const firmador = await this.firmadorRepository.findOne({ where: { id } });
-      if (!firmador) {
+      const estado = await this.estadoRepository.findOneBy({ id });
+      if (!estado) {
         throw new BadRequestException({
           statusCode: 400,
-          error: `El firmador con ID ${id} NO Existe`,
-          message: `firmador con ID ${id} no fue encontrado`,
+          error: `El estado con ID ${id} NO Existe`,
+          message: `Estado con ID ${id} no fue encontrado`,
         });
       }
-      return firmador;
+      return estado;
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -103,19 +102,15 @@ export class FirmadorService {
     }
   }
 
-  async update(
-    id: number,
-    updateFirmadorDto: UpdateFirmadorDto,
-  ): Promise<Firmador> {
+  async update(id: number, updateEstadoDto: UpdateEstadoDto): Promise<Estado> {
     try {
-      const existingFirmador = await this.findOne(id);
-      const { ...rest } = updateFirmadorDto;
-      const updateResult = await this.firmadorRepository.update(id, updateFirmadorDto);
+      const existingEstado = await this.findOne(id);
+      const updateResult = await this.estadoRepository.update(id, updateEstadoDto);
       if (updateResult.affected === 0) {
         throw new BadRequestException({
           statusCode: 400,
-          error: `El derivacion con ID ${id} NO se actualizo correctamente`,
-          message: `derivacion con ID ${id} no se actualizo correctamente`,
+          error: `El estado con ID ${id} NO se actualizo correctamente`,
+          message: `Estado con ID ${id} no se actualizo correctamente`,
         });
       }
       return this.findOne(id);
@@ -140,9 +135,8 @@ export class FirmadorService {
 
   async remove(id: number): Promise<void> {
     try {
-      const existingFirmador = await this.findOne(id);
-      await this.firmadorRepository.remove(existingFirmador);
-
+      const existingEstado = await this.findOne(id);
+      await this.estadoRepository.remove(existingEstado);
     } catch (error) {
       throw new InternalServerErrorException({
         statusCode: 500,

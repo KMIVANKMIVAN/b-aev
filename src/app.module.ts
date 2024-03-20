@@ -22,6 +22,7 @@ import { TipoRespaldo } from './tipo_respaldo/entities/tipo_respaldo.entity';
 
 import { Derivacion } from './derivacion/entities/derivacion.entity';
 import { Firmador } from './firmador/entities/firmador.entity';
+import { Estado } from './estado/entities/estado.entity';
 
 //////cuadro
 
@@ -48,6 +49,8 @@ import { CuadroModule } from './cuadro/cuadro.module';
 import { ProyectosModule } from './proyectos/proyectos.module';
 import { GenerarPdfsModule } from './generar-pdfs/generar-pdfs.module';
 import { RecibirPdfsEnviarModule } from './recibir-pdfs-enviar/recibir-pdfs-enviar.module';
+import { ConsultasExternasModule } from './consultas-externas/consultas-externas.module';
+import { EstadoModule } from './estado/estado.module';
 
 
 @Module({
@@ -173,6 +176,7 @@ import { RecibirPdfsEnviarModule } from './recibir-pdfs-enviar/recibir-pdfs-envi
           TipoRespaldo,
           Derivacion,
           Firmador,
+          Estado,
         ],
         synchronize: false,
         multipleStatements: true,
@@ -205,8 +209,10 @@ import { RecibirPdfsEnviarModule } from './recibir-pdfs-enviar/recibir-pdfs-envi
     ProyectosModule,
     GenerarPdfsModule,
     RecibirPdfsEnviarModule,
+    ConsultasExternasModule,
+    EstadoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

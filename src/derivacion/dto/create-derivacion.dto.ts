@@ -20,17 +20,17 @@ export class CreateDerivacionDto {
   @IsString()
   observacion: string;
 
-  @IsInt()
-  recibido: number;
-
   @IsString()
-  estado: string;
+  estado: number;
 
   @IsInt()
   id_enviador: number;
 
   @IsInt()
   id_destinatario: number;
+
+  @IsString()
+  codigo_proyecto: string;
 
   @IsString()
   documento: string;

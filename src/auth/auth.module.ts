@@ -9,6 +9,8 @@ import { UsersModule } from '../users/users.module';
 
 import { HttpModule } from '@nestjs/axios';
 
+import { ConsultasExternasModule } from "../consultas-externas/consultas-externas.module";
+
 @Module({
   imports: [
     HttpModule,
@@ -18,9 +20,10 @@ import { HttpModule } from '@nestjs/axios';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '8h' },
     }),
+    ConsultasExternasModule,
   ],
   controllers: [AuthController],
   providers: [AuthService],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule { }

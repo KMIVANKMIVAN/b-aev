@@ -11,6 +11,14 @@ export class DerivacionController {
   async create(@Body() createDerivacionDto: CreateDerivacionDto) {
     return await this.derivacionService.create(createDerivacionDto);
   }
+  @Post()
+  async createAutomatico(@Body() createDerivacionDto: CreateDerivacionDto) {
+    return await this.derivacionService.createAutomatico(createDerivacionDto);
+  }
+  @Get('/poridesembolso/:iddesembolso')
+  async findOneIdDesembolso(@Param('iddesembolso') iddesembolso: number) {
+    return await this.derivacionService.findOneIdDesembolso(+iddesembolso);
+  }
 
   @Get()
   async findAll() {
@@ -20,6 +28,26 @@ export class DerivacionController {
   @Get(':id')
   async findOne(@Param('id') id: number) {
     return await this.derivacionService.findOne(+id);
+  }
+
+  @Get('busonderivacion/:id')
+  async BusonDerivacion(@Param('id') id: number) {
+    return await this.derivacionService.BusonDerivacion(+id);
+  }
+
+  @Get('busonderivacionfecha/:id/:fechaInicio/:fechaFinal/:idEstado')
+  async BusonDerivacionFecha(
+    @Param('id') id: number,
+    @Param('fechaInicio') fechaInicio: string,
+    @Param('fechaFinal') fechaFinal: string,
+    @Param('idEstado') idEstado: number,
+  ) {
+    return await this.derivacionService.BusonDerivacionFecha(
+      +id,
+      fechaInicio,
+      fechaFinal,
+      +idEstado,
+    );
   }
 
   @Patch(':id')

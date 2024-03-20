@@ -15,7 +15,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   // @UseGuards(AuthGuard)
   @Post('create/:nivel')
@@ -45,6 +45,12 @@ export class UsersController {
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
   }
+  @UseGuards(AuthGuard)
+  @Get('/buscarnomusuardepartemento/:buscar/:idofi')
+  buscarNomUsuarDepartemento(@Param('buscar') buscar: string, @Param('idofi') idofi: number) {
+    return this.usersService.buscarNomUsuarDepartemento(buscar, idofi);
+  }
+
   @UseGuards(AuthGuard)
   @Get('/buscar/:buscar')
   buscarUsuarios(@Param('buscar') buscar: string) {
