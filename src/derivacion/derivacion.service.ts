@@ -61,37 +61,49 @@ export class DerivacionService {
 
       const buscarIdDesemb = await this.findOneIdDesembolso(createDerivacionDto.id_desembolso);
 
-      if (!buscarIdDesemb) {
+      if (buscarIdDesemb == null) {
 
         const newDerivacion = this.derivacionRepository.create(createDerivacionDto);
 
         newDerivacion.fecha_envio = new Date();
         newDerivacion.estado = 1;
+        newDerivacion.firmador = 1;
 
         return await this.derivacionRepository.save(newDerivacion);
       }
+      if (buscarIdDesemb && buscarIdDesemb.estado === 2) {
 
+        const newDerivacion = this.derivacionRepository.create(createDerivacionDto);
+
+        newDerivacion.fecha_envio = new Date();
+        newDerivacion.estado = 1;
+        newDerivacion.firmador = 1;
+        return await this.derivacionRepository.save(newDerivacion);
+      }
       if (buscarIdDesemb && buscarIdDesemb.firmador === buscarIdDesemb.limite) {
+
         throw new BadRequestException({
           statusCode: 400,
           error: `El Instructivo fue firmado por Todos`,
           message: `El Instructivo fue firmado por todos`,
         });
       }
-
-      if (buscarIdDesemb && buscarIdDesemb.estado === 2) {
-        const newDerivacion = this.derivacionRepository.create(createDerivacionDto);
-
-        newDerivacion.fecha_envio = new Date();
-        newDerivacion.estado = 1;
-
-        return await this.derivacionRepository.save(newDerivacion);
+      if (buscarIdDesemb.estado != 3) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Usted debe Aceptar el Instructivo para poder Firmarlo y derivarlo`,
+          message: `El Instructivo no fue Aceptado por Usted`,
+        });
       }
 
       const newDerivacion = this.derivacionRepository.create(createDerivacionDto);
 
       newDerivacion.fecha_envio = new Date();
-      newDerivacion.estado = buscarIdDesemb.estado++;
+      // Incrementar primero
+      buscarIdDesemb.firmador += 1;
+
+      // Luego asignar
+      newDerivacion.firmador = buscarIdDesemb.firmador;
 
       return await this.derivacionRepository.save(newDerivacion);
 
@@ -110,16 +122,13 @@ export class DerivacionService {
 
   async findOneIdDesembolso(idDesembolso: number): Promise<Derivacion> {
     try {
+      console.log("findOneIdDesembolso");
+
       const derivacion = await this.derivacionRepository.findOne({
         where: { id_desembolso: idDesembolso },
+        order: { fecha_envio: 'DESC' }, // Ordena por fecha_envio en orden descendente
       });
-      if (!derivacion) {
-        throw new BadRequestException({
-          statusCode: 400,
-          error: `El derivacion con ID ${idDesembolso} NO Existe`,
-          message: `derivacion con ID ${idDesembolso} no fue encontrado`,
-        });
-      }
+
       return derivacion;
     } catch (error) {
       if (error instanceof BadRequestException) {
@@ -133,7 +142,6 @@ export class DerivacionService {
       }
     }
   }
-
 
   async findAll(): Promise<Derivacion[]> {
     try {
@@ -213,6 +221,8 @@ export class DerivacionService {
   ): Promise<Derivacion[]> {
     try {
       // const derivacion = await this.derivacionRepository.find({ where: { id_destinatario: id } });
+      console.log();
+
       const sql = `
       SELECT
           d.id,
@@ -234,7 +244,7 @@ export class DerivacionService {
       WHERE
           d.id_destinatario = ${id}
           AND e.id = ${idEstado}
-          AND d.fecha_envio BETWEEN '${fechaInicio}' AND '${fechaFinal}';
+          AND DATE(d.fecha_envio) BETWEEN '${fechaInicio}' AND '${fechaFinal}';
   
       `;
       const estado = idEstado === 1 ? 'Enviado' : idEstado === 2 ? 'Rechazado' : 'Aceptado';

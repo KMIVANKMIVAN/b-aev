@@ -11,7 +11,7 @@ export class DerivacionController {
   async create(@Body() createDerivacionDto: CreateDerivacionDto) {
     return await this.derivacionService.create(createDerivacionDto);
   }
-  @Post()
+  @Post('/automatico')
   async createAutomatico(@Body() createDerivacionDto: CreateDerivacionDto) {
     return await this.derivacionService.createAutomatico(createDerivacionDto);
   }

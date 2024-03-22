@@ -12,7 +12,7 @@ export class Derivacion {
   @Column({ type: 'int' })
   firmador: number;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'datetime' })
   fecha_envio: Date;
 
   @Column({ type: 'int' })
