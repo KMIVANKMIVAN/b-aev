@@ -361,51 +361,8 @@ AND NOT ISNULL(d.fecha_banco)
       }
     }
   }
-  async consultaSipago(codid: string): Promise<Cuadro[]> {
+  async consultaSipago2(codid: string): Promise<Cuadro[]> {
     try {
-      /* const sql = `
-        SELECT tp.detalle,tp.id as idtipo,e.etapa,DATE_FORMAT(d.fecha_generado,'%d/%m/%Y') as fechagenerado,DATE_FORMAT(d.fecha_banco,'%d/%m/%Y') as fechabanco,d.*
-        FROM desembolsos d
-        INNER JOIN tipoplanillas tp ON d.tipo_planilla = tp.id
-        INNER JOIN etapas e ON d.estado = e.id
-        WHERE d.proyecto_id = ${codid} 
-        AND d.estado = 6
-        AND d.activo = 1
-        ORDER BY d.id desc
-      `; */
-      /* const sql = `
-      SELECT 
-      tp.detalle,
-      tp.id AS idtipo,
-      e.etapa,
-      DATE_FORMAT(d.fecha_generado, '%d/%m/%Y') AS fechagenerado,
-      DATE_FORMAT(d.fecha_banco, '%d/%m/%Y') AS fechabanco,
-      d.*,
-      CASE 
-          WHEN (d.fecha_banco IS NULL OR d.fecha_banco = '' OR STR_TO_DATE(d.fecha_banco, '%Y-%m-%d') >= '2023-12-27') THEN 0
-          ELSE 1
-      END AS buttonAEV,
-      CASE 
-          WHEN (d.fecha_busa IS NULL OR d.fecha_busa = '' OR STR_TO_DATE(d.fecha_busa, '%Y-%m-%d') >= '2023-12-27') THEN 0
-          ELSE 1
-      END AS buttonBUSA
-  FROM desembolsos d
-  INNER JOIN tipoplanillas tp ON d.tipo_planilla = tp.id
-  INNER JOIN etapas e ON d.estado = e.id
-  WHERE d.proyecto_id = ${codid} 
-      AND d.estado = 6
-      AND d.activo = 1
-  ORDER BY d.id DESC;  
-      `;
-      const result = await this.connection.query(sql);
-      if (result.length === 0) {
-        throw new BadRequestException({
-          statusCode: 400,
-          error: `No se encontraron datos para el codigo: ${codid}`,
-          message: `No se encontraron datos para el codigo: ${codid} sin datos`,
-        });
-      }
-      return result; */
       const sql = `
       SELECT 
     tp.detalle,
@@ -440,25 +397,6 @@ INNER JOIN etapas e ON d.estado = e.id
         });
       }
       return result;
-
-      /* const ids = result.map((data: any) => data.id);
-
-      const buttonAEVResponses = await Promise.all(
-        ids.map((id: string) => this.verificarEnvioBanco(`${id}-AEV`)),
-      );
-      const buttonBUSAResponses = await Promise.all(
-        ids.map((id: string) => this.verificarEnvioBanco(`${id}-BUSA`)),
-      );
-
-      const resultWithButtons = result.map((data: any, index: number) => {
-        return {
-          ...data,
-          buttonAEV: buttonAEVResponses[index],
-          buttonBUSA: buttonBUSAResponses[index],
-        };
-      });
-
-      return resultWithButtons; */
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -477,6 +415,64 @@ INNER JOIN etapas e ON d.estado = e.id
       }
     }
   }
+
+  async consultaSipago(codid: string): Promise<Cuadro[]> {
+    // async consultaSipagoFiltradoFechaGenerado(codid: string): Promise<Cuadro[]> {
+    try {
+      const sql = `
+      SELECT 
+          tp.detalle,
+          tp.id AS idtipo,
+          e.etapa,
+          DATE_FORMAT(d.fecha_generado, '%d/%m/%Y') AS fechagenerado,
+          DATE_FORMAT(d.fecha_banco, '%d/%m/%Y') AS fechabanco,
+          d.*,
+          CASE 
+              WHEN (d.fecha_banco IS NULL OR d.fecha_banco = '')  THEN 0
+              ELSE 1
+          END AS buttonAEV,
+          CASE 
+              WHEN (d.fecha_busa IS NULL OR d.fecha_busa = '') THEN 0
+              ELSE 1
+          END AS buttonBUSA
+      FROM desembolsos d
+      INNER JOIN tipoplanillas tp ON d.tipo_planilla = tp.id
+      INNER JOIN etapas e ON d.estado = e.id
+        WHERE d.proyecto_id = ${codid} 
+            AND d.estado = 6
+            AND d.activo = 1
+            AND d.fecha_generado >= '${this.fechainicio}'
+        ORDER BY d.id DESC;  
+      `;
+
+      const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se encontraron datos para el codigo: ${codid}`,
+          message: `No se encontraron datos para el codigo: ${codid} sin datos`,
+        });
+      }
+      return result;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarUsuarios) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (buscarUsuarios) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarUsuarios): ${error}`,
+          message: `Error del Servidor en (buscarUsuarios): ${error}`,
+        });
+      }
+    }
+  }
+
   async verificarEnvioBanco(numero: string): Promise<boolean> {
     try {
       if (numero.includes('-AEV')) {

@@ -24,7 +24,7 @@ export class RespaldoDesembolsosService {
     private readonly respaldodesembolsoRepository: Repository<RespaldoDesembolso>,
     private connection: Connection,
     private configService: ConfigService,
-  ) {}
+  ) { }
 
   namePc = this.configService.get<string>('NAMEPC');
 
@@ -92,7 +92,7 @@ export class RespaldoDesembolsosService {
           dateTime,
           archivo,
         );
-        const destinationPath = `/home/${this.namePc}/Documentos/${uniqueName}`;
+        const destinationPath = `/home/${this.namePc}/Documentos/${createRespaldoDesembolsoDto.desembolsos_id}/${uniqueName}`;
         try {
           fs.writeFileSync(destinationPath, file.buffer);
           const responseObj = {
@@ -344,7 +344,7 @@ export class RespaldoDesembolsosService {
 
       const nomarchivo = respaldosDesembolso[0].archivo;
 
-      const filesDirectory = `/home/${this.namePc}/Documentos/`;
+      const filesDirectory = `/home/${this.namePc}/Documentos/${desembolsos_id}`;
 
       const filesInDirectory = fs.readdirSync(filesDirectory);
 
@@ -395,6 +395,8 @@ export class RespaldoDesembolsosService {
       }
     }
   }
+  
+
 
   async findOne(id: number): Promise<RespaldoDesembolso> {
     try {

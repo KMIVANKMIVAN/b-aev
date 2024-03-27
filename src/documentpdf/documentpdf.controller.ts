@@ -31,9 +31,9 @@ export class DocumentpdfController {
   }
 
   @UseGuards(AuthGuard)
-  @Get('/download/:fileName')
-  download(@Param('fileName') fileName: string, @Res() res: Response) {
-    this.documentpdfService.downloadFile(fileName, res);
+  @Get('/download/:nomCarperta/:fileName')
+  download(@Param('nomCarperta') nomCarperta: string, @Param('fileName') fileName: string, @Res() res: Response) {
+    this.documentpdfService.downloadFile(nomCarperta, fileName, res);
   }
   @UseGuards(AuthGuard)
   @Get('/view/:fileName')

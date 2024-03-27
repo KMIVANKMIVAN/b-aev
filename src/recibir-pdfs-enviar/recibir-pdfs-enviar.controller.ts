@@ -66,8 +66,13 @@ export class RecibirPdfsEnviarController {
 
     // Ya tienes el PDF en base64, por lo que puedes devolverlo directamente
     res.json({ nombrePdf, pdfBase64 });
+  }
+  @Get('firmarbasenomcompl/:nombrePdf')
+  async traerPDFFirmarBase64NombreComple(@Param('nombrePdf') nombrePdfParam: string, @Res() res: Response) {
+    const { nombrePdf, pdfBase64 } = await this.recibirPdfsEnviarService.traerPDFFirmarBase64NombreComple(nombrePdfParam);
 
-
+    // Ya tienes el PDF en base64, por lo que puedes devolverlo directamente
+    res.json({ nombrePdf, pdfBase64 });
   }
 
   @Post('recibirbase')
@@ -95,5 +100,15 @@ export class RecibirPdfsEnviarController {
     @Res() res: Response,
   ) {
     await this.recibirPdfsEnviarService.base64ToPdfCarpeta(base64String, fileName, res);
+  }
+
+  @Post('/capeta')
+  async capeta(
+    @Body('base64String') base64String: string,
+    @Body('CarpetaName') carpetaName: string,
+    @Body('fileName') fileName: string,
+    @Res() res: Response,
+  ) {
+    await this.recibirPdfsEnviarService.capeta(base64String, carpetaName, fileName, res);
   }
 }

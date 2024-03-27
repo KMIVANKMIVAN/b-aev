@@ -128,7 +128,7 @@ export class RecibirPdfsEnviarService {
   }
   async traerPDFFirmarBase64(nombreParcialPdf: string): Promise<{ nombrePdf: string, pdfBase64: string }> {
     try {
-      const documentsPath = `/home/${this.namePc}/Documentos`;
+      const documentsPath = `/home/${this.namePc}/Documentos/${nombreParcialPdf}`;
 
       // Busca archivos en el directorio
       const files = fs.readdirSync(documentsPath);
@@ -148,6 +148,25 @@ export class RecibirPdfsEnviarService {
       throw new Error('Error al buscar PDFs para firmar');
     }
   }
+  async traerPDFFirmarBase64NombreComple(nombrePdf: string): Promise<{ nombrePdf: string, pdfBase64: string }> {
+    try {
+      const documentsPath = `/home/${this.namePc}/Documentos/${nombrePdf}`;
+
+      const pdfFullPath = path.join(documentsPath, `${nombrePdf}.pdf`);
+
+      // Verifica si el archivo existe
+      if (fs.existsSync(pdfFullPath)) {
+        const pdfBuffer = fs.readFileSync(pdfFullPath);
+        const pdfBase64 = pdfBuffer.toString('base64'); // Convierte el buffer a base64
+        return { nombrePdf, pdfBase64 }; // Retorna el nombre del archivo y el PDF en base64
+      } else {
+        throw new Error('No se encontró el PDF especificado para firmar');
+      }
+    } catch (error) {
+      throw new Error('Error al buscar PDFs para firmar');
+    }
+  }
+
 
   async recibirBase64(base64Pdf: string): Promise<string> {
     try {
@@ -200,7 +219,7 @@ export class RecibirPdfsEnviarService {
   ): Promise<void> {
     try {
       const filesDirectory = `/home/${this.namePc}/Documentos/`;
-      const folderName = `${fileName}PDF`;
+      const folderName = `${fileName}`;
       const folderPath = path.join(filesDirectory, folderName);
       const filePath = path.join(folderPath, `${fileName}.pdf`);
 
@@ -236,5 +255,47 @@ export class RecibirPdfsEnviarService {
     }
   }
 
+  async capeta(
+    base64String: string,
+    carpetaName: string,
+    fileName: string,
+    res: Response,
+  ): Promise<void> {
+    try {
+      const filesDirectory = `/home/${this.namePc}/Documentos/${carpetaName}/`;
+      const folderName = `${fileName}`;
+      const folderPath = path.join(filesDirectory, folderName);
+      const filePath = path.join(folderPath, `${fileName}.pdf`);
 
+      // Verificar si la carpeta ya existe
+      if (!fs.existsSync(folderPath)) {
+        fs.mkdirSync(folderPath);
+      } else {
+        // Verificar si el archivo ya existe
+        if (fs.existsSync(filePath)) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: `Ya se grabó el archivo ${fileName}`,
+            message: `No se pudo crear el archivo debido a que ya se grabó el archivo ${fileName}`,
+          });
+        }
+      }
+
+      const buffer = Buffer.from(base64String, 'base64');
+      fs.writeFileSync(filePath, buffer);
+
+      const nombrePDF = `${folderName}/${fileName}.pdf`;
+      res.status(200).json({ message: 'El Archivo se guardó Exitosamente', nombrePDF });
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (base64ToPdfCarpeta): ${error}`,
+          message: `Error del Servidor en (base64ToPdfCarpeta): ${error}`,
+        });
+      }
+    }
+  }
 }

@@ -21,7 +21,7 @@ export class DatoscontratoService {
     private httpService: HttpService,
 
     private configService: ConfigService,
-  ) {}
+  ) { }
   namePc = this.configService.get<string>('NAMEPC');
   fechaInicio = this.configService.get<string>('FECHAINICIO');
 
@@ -169,7 +169,7 @@ export class DatoscontratoService {
     }
   }
 
-  async findOneContCodCompleja(contcod: string): Promise<any> {
+  async findOneContCodCompleja3(contcod: string): Promise<any> {
     try {
       /* const datosContCod = await this.findOneContCod(contcod);
       if (datosContCod !== null && datosContCod !== undefined) {
@@ -315,6 +315,71 @@ WHERE d.estado = 6
       }
     }
   }
+  async findOneContCodCompleja(contcod: string): Promise<any> {
+    try {
+      const datosContCod = await this.findOneContCod(contcod);
+      if (datosContCod !== null && datosContCod !== undefined) {
+        const sql = `
+        SELECT 
+            *,
+            d.id AS iddesem,
+            DATE_FORMAT(d.fecha_generado, '%d/%m/%Y') AS fechagenerado,
+            DATE_FORMAT(d.fecha_banco, '%d/%m/%Y') AS fechabanco,
+            d.monto_desembolsado,
+            tp.detalle,
+            tc.titular,
+            tc.cuentatitular,
+            CASE 
+                WHEN (d.fecha_banco IS NULL OR d.fecha_banco = '') THEN 0
+                ELSE 1
+            END AS buttonAEV,
+            CASE 
+                WHEN (d.fecha_busa IS NULL OR d.fecha_busa = '')  THEN 0
+                ELSE 1
+            END AS buttonBUSA
+        FROM desembolsos d
+        INNER JOIN etapas e ON d.estado = e.id
+        LEFT JOIN tipoplanillas tp ON d.tipo_planilla = tp.id
+        LEFT JOIN titularcuenta tc ON d.idcuenta = tc.id 
+        WHERE d.estado = 6
+            AND d.cont_cod = ${contcod}
+            AND d.fecha_insert >= '${this.fechaInicio}'
+        `;
+        const result = await this.connection.query(sql, [contcod]);
+
+        if (result.length === 0) {
+          throw new BadRequestException({
+            statusCode: 400,
+            error: `Vivienda Nueva con ${contcod} NO Existe`,
+            message: `Vivienda Nueva con ${contcod} no fueron encontrados`,
+          });
+        }
+        return result;
+      } else {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `Vivienda Nueva con ${contcod} NO Existe`,
+          message: `Vivienda Nueva con ${contcod} no fue encontrado`,
+        });
+      }
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarUsuarios) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (buscarUsuarios) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (buscarUsuarios): ${error}`,
+          message: `Error del Servidor en (buscarUsuarios): ${error}`,
+        });
+      }
+    }
+  }
   async verificarEnvioBanco(numero: string): Promise<boolean> {
     try {
       const idnum = numero;
@@ -349,7 +414,7 @@ WHERE d.estado = 6
       }
       /* const idnum = numero;
       let fechaBanco: string | null = null;
-
+  
       if (numero.includes('-AEV')) {
         const sql = `SELECT d.fecha_banco FROM desembolsos d WHERE d.id = '${idnum}'`;
         const result = await this.connection.query(sql);
