@@ -17,7 +17,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('documentpdf')
 export class DocumentpdfController {
-  constructor(private readonly documentpdfService: DocumentpdfService) { }
+  constructor(private readonly documentpdfService: DocumentpdfService) {}
 
   @UseGuards(AuthGuard)
   @Post('upload/:textToReplace')
@@ -32,8 +32,21 @@ export class DocumentpdfController {
 
   @UseGuards(AuthGuard)
   @Get('/download/:nomCarperta/:fileName')
-  download(@Param('nomCarperta') nomCarperta: string, @Param('fileName') fileName: string, @Res() res: Response) {
+  download(
+    @Param('nomCarperta') nomCarperta: string,
+    @Param('fileName') fileName: string,
+    @Res() res: Response,
+  ) {
     this.documentpdfService.downloadFile(nomCarperta, fileName, res);
+  }
+  @UseGuards(AuthGuard)
+  @Delete('/delete/:nomCarperta/:fileName')
+  async deletePdf(
+    @Param('nomCarperta') nomCarperta: string,
+    @Param('fileName') fileName: string,
+    @Res() res: Response,
+  ) {
+    await this.documentpdfService.eliminarPdf(nomCarperta, fileName, res);
   }
   @UseGuards(AuthGuard)
   @Get('/view/:fileName')
@@ -52,12 +65,6 @@ export class DocumentpdfController {
   @Get('/buscarpdf/:partialName')
   async buscarpdf(@Param('partialName') partialName: string) {
     return this.documentpdfService.buscarpdf(partialName);
-  }
-
-  @UseGuards(AuthGuard)
-  @Delete('/delete/:fileName')
-  async deletePdf(@Param('fileName') fileName: string, @Res() res: Response) {
-    await this.documentpdfService.eliminarPdf(fileName, res);
   }
 
   @UseGuards(AuthGuard)

@@ -23,7 +23,7 @@ export class DocumentpdfService {
     private connection: Connection,
 
     private configService: ConfigService,
-  ) { }
+  ) {}
 
   namePc = this.configService.get<string>('NAMEPC');
 
@@ -147,8 +147,14 @@ export class DocumentpdfService {
     }
   }
 
-  /* async downloadFile(nomCarperta: string, fileName: string, res: Response): Promise<void> {
-    const filesDirectory = `/home/${this.namePc}/Documentos/${nomCarperta}`;
+  async downloadFile(
+    nomCarperta: string,
+    fileName: string,
+    res: Response,
+  ): Promise<void> {
+    console.log('---->', nomCarperta);
+
+    const filesDirectory = `/home/${this.namePc}/Documentos/${nomCarperta}/${fileName}/`;
     try {
       const filesInDirectory = fs.readdirSync(filesDirectory);
 
@@ -186,84 +192,7 @@ export class DocumentpdfService {
       console.error('Error durante la descarga del archivo:', error);
       res.status(404).send('Error durante la descarga del archivo');
     }
-  } */
-
-
-  /* async downloadFile(nomCarperta: string, fileName: string, res: Response): Promise<void> {
-    const filesDirectory = `/home/${this.namePc}/Documentos/${nomCarperta}`;
-    try {
-      const filesInDirectory = fs.readdirSync(filesDirectory);
-
-      const matchingFiles = filesInDirectory.filter((file) =>
-        file.includes(fileName),
-      );
-
-      if (matchingFiles.length === 0) {
-        res.status(404).send('Error: ¿Estás seguro de que se subió el archivo?');
-        return;
-      }
-
-      const fileToDownload = matchingFiles[0];
-      const filePath = path.join(filesDirectory, fileToDownload); // Usamos path.join para construir la ruta
-
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename=${fileToDownload}`,
-      );
-
-      const fileStream = fs.createReadStream(filePath);
-
-      fileStream.pipe(res);
-
-      fileStream.on('end', () => {
-        res.end();
-      });
-
-      fileStream.on('error', (error) => {
-        console.error('Error durante la descarga del archivo:', error);
-        res.status(404).send('Error durante la descarga del archivo');
-      });
-    } catch (error) {
-      console.error('Error durante la descarga del archivo:', error);
-      res.status(404).send('Error durante la descarga del archivo');
-    }
-  } */
-  async downloadFile(nomCarperta: string, fileName: string, res: Response): Promise<void> {
-    const filesDirectory = `/home/${this.namePc}/Documentos/${nomCarperta}/${fileName}`;
-    try {
-      const filesInDirectory = fs.readdirSync(filesDirectory);
-
-      // Asegúrate de que el nombre del archivo incluye la extensión '.pdf'
-      const expectedFileName = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`;
-
-      // Encuentra un archivo que coincida exactamente con el nombre de archivo esperado
-      const fileToDownload = filesInDirectory.find(file => file === expectedFileName);
-
-      if (!fileToDownload) {
-        res.status(404).send('Error: ¿Estás seguro de que se subió el archivo?');
-        return;
-      }
-
-      const filePath = path.join(filesDirectory, fileToDownload);
-
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${fileToDownload}"`);
-
-      const fileStream = fs.createReadStream(filePath);
-      fileStream.pipe(res);
-
-      fileStream.on('end', () => res.end());
-      fileStream.on('error', (error) => {
-        console.error('Error durante la descarga del archivo:', error);
-        res.status(500).send('Error durante la descarga del archivo');
-      });
-    } catch (error) {
-      console.error('Error durante la descarga del archivo:', error);
-      res.status(500).send('Error durante la descarga del archivo');
-    }
   }
-
 
   private fileExists(filePath: string): Promise<boolean> {
     return new Promise((resolve) => {
@@ -408,13 +337,17 @@ export class DocumentpdfService {
       }
     }
   }
-  async eliminarPdf(textToMatch: string, res: Response): Promise<void> {
+  async eliminarPdf(
+    nomCarperta: string,
+    fileName: string,
+    res: Response,
+  ): Promise<void> {
     try {
-      const filesDirectory = `/home/${this.namePc}/Documentos/`;
+      const filesDirectory = `/home/${this.namePc}/Documentos/${nomCarperta}/${fileName}/`;
       const filesInDirectory = fs.readdirSync(filesDirectory);
 
       const matchingFile = filesInDirectory.find((file) =>
-        file.startsWith(textToMatch),
+        file.startsWith(fileName),
       );
 
       if (!matchingFile) {
@@ -427,11 +360,11 @@ export class DocumentpdfService {
 
       fs.unlinkSync(filePath);
 
-      const numero = this.obtenerParteNumerica(textToMatch);
+      const numero = this.obtenerParteNumerica(fileName);
 
-      if (textToMatch.includes('-AEV')) {
+      if (fileName.includes('-AEV')) {
         await this.actualizarRegistroEliminarEnBaseDeDatos(numero, 'archivo');
-      } else if (textToMatch.includes('-BUSA')) {
+      } else if (fileName.includes('-BUSA')) {
         await this.actualizarRegistroEliminarEnBaseDeDatos(
           numero,
           'archivo_busa',

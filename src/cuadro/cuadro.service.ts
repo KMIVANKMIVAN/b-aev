@@ -219,43 +219,43 @@ export class CuadroService {
     try {
       const sql = `
       SELECT
-      p.id AS id_proyecto,
-      p.num AS codigo,
-      p.proyecto_nombre AS nombre_proyecto,
-      t.tipo AS tipo,
-      d.id AS id_desembolso,
-      d.cont_cod,
-      d.monto_fisico,
-      d.descuento_anti_reten,
-      d.multa,
-      d.monto_desembolsado,
-      d.idcuenta,
-      c.titular,
-      c.cuentatitular,
-      d.estado,
-      d.numero_inst,
-      d.numero_factura,
-      d.fecha_insert,
-      d.objeto,
-      d.fecha_banco,
-      d.archivo,
-      d.fecha_busa,
-      d.archivo_busa,
-      d.fecha_abono 
-      FROM sipago.desembolsos d,
-      cuadro.proyectosexcel p,
-      cuadro.tipo t,
-      sipago.titularcuenta c
-      WHERE d.proyecto_id = p.id
-      AND p.idTipo = t.idTipo
-      AND d.idcuenta = c.id
-      AND d.estado = 6
-      AND NOT ISNULL(d.archivo)
-      AND NOT ISNULL(d.fecha_banco)
-AND d.fecha_insert>= '${this.fechainicio}'
-AND  ISNULL(d.fecha_busa) 
-AND  ISNULL(d.archivo_busa)
-limit 100
+            p.id AS id_proyecto,
+            p.num AS codigo,
+            p.proyecto_nombre AS nombre_proyecto,
+            t.tipo AS tipo,
+            d.id AS id_desembolso,
+            d.cont_cod,
+            d.monto_fisico,
+            d.descuento_anti_reten,
+            d.multa,
+            d.monto_desembolsado,
+            d.idcuenta,
+            c.titular,
+            c.cuentatitular,
+            d.estado,
+            d.numero_inst,
+            d.numero_factura,
+            d.fecha_insert,
+            d.objeto,
+            d.fecha_banco,
+            d.archivo,
+            d.fecha_busa,
+            d.archivo_busa,
+            d.fecha_abono 
+            FROM sipago.desembolsos d,
+            cuadro.proyectosexcel p,
+            cuadro.tipo t,
+            sipago.titularcuenta c
+            WHERE d.proyecto_id = p.id
+            AND p.idTipo = t.idTipo
+            AND d.idcuenta = c.id
+            AND d.estado = 6
+            AND NOT ISNULL(d.archivo)
+            AND NOT ISNULL(d.fecha_banco)
+      AND d.fecha_insert>= '${this.fechainicio}'
+      AND  ISNULL(d.fecha_busa) 
+      AND  ISNULL(d.archivo_busa)
+      limit 100
       `;
       // this.fechainicio;
       const result = await this.connection.query(sql);

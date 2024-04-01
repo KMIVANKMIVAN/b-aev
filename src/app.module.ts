@@ -52,7 +52,6 @@ import { RecibirPdfsEnviarModule } from './recibir-pdfs-enviar/recibir-pdfs-envi
 import { ConsultasExternasModule } from './consultas-externas/consultas-externas.module';
 import { EstadoModule } from './estado/estado.module';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -77,7 +76,7 @@ import { EstadoModule } from './estado/estado.module';
     DerivacionModule,
     FirmadorModule,
 
-    /* TypeOrmModule.forRoot({
+    TypeOrmModule.forRoot({
       logging: true,
       entities: [
         User,
@@ -92,6 +91,9 @@ import { EstadoModule } from './estado/estado.module';
         Etapa,
         RespaldoDesembolso,
         TipoRespaldo,
+        Derivacion,
+        Firmador,
+        Estado,
       ],
       synchronize: false,
       multipleStatements: true,
@@ -116,7 +118,7 @@ import { EstadoModule } from './estado/estado.module';
       password: '',
       database: 'cuadro',
     }),
-    CuadroModule, */
+    CuadroModule,
     /* TypeOrmModule.forRoot({
       logging: true,
       entities: [
@@ -157,7 +159,7 @@ import { EstadoModule } from './estado/estado.module';
       database: configService.get<string>('DATABASECUADRO'),
     }), */
 
-    TypeOrmModule.forRootAsync({
+    /* TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         logging: true,
@@ -204,7 +206,7 @@ import { EstadoModule } from './estado/estado.module';
         password: configService.get<string>('DATABASECUADROPASSWORD'),
         database: configService.get<string>('DATABASECUADRO'),
       }),
-    }),
+    }), */
     CuadroModule,
     ProyectosModule,
     GenerarPdfsModule,
@@ -215,4 +217,4 @@ import { EstadoModule } from './estado/estado.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
