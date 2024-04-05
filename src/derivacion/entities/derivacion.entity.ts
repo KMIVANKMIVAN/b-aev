@@ -33,6 +33,15 @@ export class Derivacion {
   @Column({ type: 'varchar', length: 20 })
   codigo_proyecto: string;
 
+  @Column({ type: 'int' })
+  selectVContCodPCodid: number;
+
+  @Column({ type: 'boolean' })
+  esVivienda: boolean;
+
+  @Column({ type: 'boolean' })
+  esPemar: boolean;
+
   @Column({ type: 'varchar', length: 100 })
   documento: string;
 }

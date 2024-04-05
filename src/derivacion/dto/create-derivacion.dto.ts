@@ -32,6 +32,13 @@ export class CreateDerivacionDto {
   @IsString()
   codigo_proyecto: string;
 
+  @IsInt()
+  selectVContCodPCodid: number;
+
+  esVivienda: boolean;
+
+  esPemar: boolean;
+
   @IsString()
   documento: string;
 }

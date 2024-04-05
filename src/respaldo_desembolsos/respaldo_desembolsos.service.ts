@@ -345,7 +345,7 @@ export class RespaldoDesembolsosService {
 
       const nomarchivo = respaldosDesembolso[0].archivo;
 
-      const filesDirectory = `/home/${this.namePc}/Documentos/${desembolsos_id}`;
+      const filesDirectory = `/home/${this.namePc}/Documentos/${desembolsos_id}/`;
 
       const filesInDirectory = fs.readdirSync(filesDirectory);
 

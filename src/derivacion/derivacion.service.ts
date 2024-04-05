@@ -42,6 +42,7 @@ export class DerivacionService {
       // Asigna la fecha y hora actual directamente como un objeto Date
       newDerivacion.fecha_envio = new Date(); // Esto es compatible con la mayoría de las bases de datos
 
+
       return await this.derivacionRepository.save(newDerivacion);
     } catch (error) {
       if (error instanceof BadRequestException) {
@@ -68,6 +69,7 @@ export class DerivacionService {
         newDerivacion.fecha_envio = new Date();
         newDerivacion.estado = 1;
         newDerivacion.firmador = 1;
+        newDerivacion.limite = 4;
 
         return await this.derivacionRepository.save(newDerivacion);
       }
@@ -78,6 +80,7 @@ export class DerivacionService {
         newDerivacion.fecha_envio = new Date();
         newDerivacion.estado = 1;
         newDerivacion.firmador = 1;
+        newDerivacion.limite = 4;
         return await this.derivacionRepository.save(newDerivacion);
       }
       if (buscarIdDesemb && buscarIdDesemb.firmador === buscarIdDesemb.limite) {
@@ -104,7 +107,7 @@ export class DerivacionService {
 
       // Luego asignar
       newDerivacion.firmador = buscarIdDesemb.firmador;
-
+      newDerivacion.limite = 4;
       return await this.derivacionRepository.save(newDerivacion);
 
     } catch (error) {
@@ -236,7 +239,10 @@ export class DerivacionService {
           d.id_destinatario,
           d.codigo_proyecto,
           d.documento,
-          d.estado
+          d.estado,
+          d.selectVContCodPCodid,
+          d.esVivienda,
+          d.esPemar
       FROM
           derivacion d
           JOIN firmador f ON d.firmador = f.id
