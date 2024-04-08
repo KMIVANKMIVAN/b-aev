@@ -33,6 +33,8 @@ export class RespaldoDesembolsosService {
     file: Express.Multer.File,
     res: Response,
   ): Promise<RespaldoDesembolso | Response> {
+    console.log('/1-', createRespaldoDesembolsoDto);
+
     try {
       const { tiporespaldo_id, ...restoDeDatos } = createRespaldoDesembolsoDto;
 
@@ -92,6 +94,11 @@ export class RespaldoDesembolsosService {
           dateTime,
           archivo,
         );
+        console.log(
+          '/home/${this.namePc}/Documentos/',
+          createRespaldoDesembolsoDto.desembolsos_id,
+        );
+
         const destinationPath = `/home/${this.namePc}/Documentos/${createRespaldoDesembolsoDto.desembolsos_id}/${uniqueName}`;
         // const destinationPath = `/home/${this.namePc}/Documentos/${uniqueName}`;
         try {
@@ -246,7 +253,7 @@ export class RespaldoDesembolsosService {
       if (respaldosDesembolso.length === 0) {
         throw new BadRequestException({
           statusCode: 400,
-          error: `Sin datos ID: ${desembolsos_id}`,
+          error: `No se encontraron respaldos para el Desembolso: ${desembolsos_id}`,
           message: `No se encontraron respaldos de desembolso para el ID ${desembolsos_id}`,
         });
       }
@@ -288,7 +295,7 @@ export class RespaldoDesembolsosService {
         });
       }
       const id = respaldosDesembolso[0].id;
-      const filesDirectory = `/home/${this.namePc}/Documentos/`;
+      const filesDirectory = `/home/${this.namePc}/Documentos/${desembolsos_id}/`;
       const matchingFile = fs.readdirSync(filesDirectory).find((file) => {
         const fileNameWithoutExtension = path.parse(file).name;
         const filePrefix = fileNameWithoutExtension.split('-')[0];

@@ -1,11 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { DerivacionService } from './derivacion.service';
 import { CreateDerivacionDto } from './dto/create-derivacion.dto';
 import { UpdateDerivacionDto } from './dto/update-derivacion.dto';
 
 @Controller('derivacion')
 export class DerivacionController {
-  constructor(private readonly derivacionService: DerivacionService) { }
+  constructor(private readonly derivacionService: DerivacionService) {}
 
   @Post()
   async create(@Body() createDerivacionDto: CreateDerivacionDto) {

@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateDerivacionDto } from './dto/create-derivacion.dto';
@@ -6,14 +12,13 @@ import { UpdateDerivacionDto } from './dto/update-derivacion.dto';
 import { Derivacion } from './entities/derivacion.entity';
 import { Connection } from 'typeorm';
 
-
 @Injectable()
 export class DerivacionService {
   constructor(
     @InjectRepository(Derivacion)
     private readonly derivacionRepository: Repository<Derivacion>,
     private connection: Connection,
-  ) { }
+  ) {}
 
   /* async create(createDerivacionDto: CreateDerivacionDto): Promise<Derivacion> {
     try {
@@ -37,11 +42,11 @@ export class DerivacionService {
   async create(createDerivacionDto: CreateDerivacionDto): Promise<Derivacion> {
     try {
       // Crea la nueva derivación sin el campo fecha_envio proveniente del DTO
-      const newDerivacion = this.derivacionRepository.create(createDerivacionDto);
+      const newDerivacion =
+        this.derivacionRepository.create(createDerivacionDto);
 
       // Asigna la fecha y hora actual directamente como un objeto Date
       newDerivacion.fecha_envio = new Date(); // Esto es compatible con la mayoría de las bases de datos
-
 
       return await this.derivacionRepository.save(newDerivacion);
     } catch (error) {
@@ -57,14 +62,17 @@ export class DerivacionService {
     }
   }
 
-  async createAutomatico(createDerivacionDto: CreateDerivacionDto): Promise<Derivacion> {
+  async createAutomatico(
+    createDerivacionDto: CreateDerivacionDto,
+  ): Promise<Derivacion> {
     try {
-
-      const buscarIdDesemb = await this.findOneIdDesembolso(createDerivacionDto.id_desembolso);
+      const buscarIdDesemb = await this.findOneIdDesembolso(
+        createDerivacionDto.id_desembolso,
+      );
 
       if (buscarIdDesemb == null) {
-
-        const newDerivacion = this.derivacionRepository.create(createDerivacionDto);
+        const newDerivacion =
+          this.derivacionRepository.create(createDerivacionDto);
 
         newDerivacion.fecha_envio = new Date();
         newDerivacion.estado = 1;
@@ -74,8 +82,8 @@ export class DerivacionService {
         return await this.derivacionRepository.save(newDerivacion);
       }
       if (buscarIdDesemb && buscarIdDesemb.estado === 2) {
-
-        const newDerivacion = this.derivacionRepository.create(createDerivacionDto);
+        const newDerivacion =
+          this.derivacionRepository.create(createDerivacionDto);
 
         newDerivacion.fecha_envio = new Date();
         newDerivacion.estado = 1;
@@ -84,7 +92,6 @@ export class DerivacionService {
         return await this.derivacionRepository.save(newDerivacion);
       }
       if (buscarIdDesemb && buscarIdDesemb.firmador === buscarIdDesemb.limite) {
-
         throw new BadRequestException({
           statusCode: 400,
           error: `El Instructivo fue firmado por Todos`,
@@ -99,7 +106,8 @@ export class DerivacionService {
         });
       }
 
-      const newDerivacion = this.derivacionRepository.create(createDerivacionDto);
+      const newDerivacion =
+        this.derivacionRepository.create(createDerivacionDto);
 
       newDerivacion.fecha_envio = new Date();
       // Incrementar primero
@@ -109,7 +117,6 @@ export class DerivacionService {
       newDerivacion.firmador = buscarIdDesemb.firmador;
       newDerivacion.limite = 4;
       return await this.derivacionRepository.save(newDerivacion);
-
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -125,7 +132,7 @@ export class DerivacionService {
 
   async findOneIdDesembolso(idDesembolso: number): Promise<Derivacion> {
     try {
-      console.log("findOneIdDesembolso");
+      console.log('findOneIdDesembolso');
 
       const derivacion = await this.derivacionRepository.findOne({
         where: { id_desembolso: idDesembolso },
@@ -253,7 +260,8 @@ export class DerivacionService {
           AND DATE(d.fecha_envio) BETWEEN '${fechaInicio}' AND '${fechaFinal}';
   
       `;
-      const estado = idEstado === 1 ? 'Enviado' : idEstado === 2 ? 'Rechazado' : 'Aceptado';
+      const estado =
+        idEstado === 1 ? 'Enviado' : idEstado === 2 ? 'Rechazado' : 'Aceptado';
 
       const derivacion = await this.connection.query(sql);
       if (derivacion.length === 0) {
@@ -279,7 +287,9 @@ export class DerivacionService {
 
   async findOne(id: number): Promise<Derivacion> {
     try {
-      const derivacion = await this.derivacionRepository.findOne({ where: { id } });
+      const derivacion = await this.derivacionRepository.findOne({
+        where: { id },
+      });
       if (!derivacion) {
         throw new BadRequestException({
           statusCode: 400,
@@ -311,7 +321,10 @@ export class DerivacionService {
       const updatedDerivacion: Partial<Derivacion> = {
         ...rest,
       };
-      const updateResult = await this.derivacionRepository.update(id, updatedDerivacion);
+      const updateResult = await this.derivacionRepository.update(
+        id,
+        updatedDerivacion,
+      );
       if (updateResult.affected === 0) {
         throw new BadRequestException({
           statusCode: 400,
@@ -340,7 +353,6 @@ export class DerivacionService {
   }
 
   async remove(id: number): Promise<void> {
-
     try {
       const existingDerivacion = await this.findOne(id);
       await this.derivacionRepository.remove(existingDerivacion);
