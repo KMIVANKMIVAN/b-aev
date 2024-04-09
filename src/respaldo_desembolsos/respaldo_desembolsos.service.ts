@@ -24,7 +24,7 @@ export class RespaldoDesembolsosService {
     private readonly respaldodesembolsoRepository: Repository<RespaldoDesembolso>,
     private connection: Connection,
     private configService: ConfigService,
-  ) {}
+  ) { }
 
   namePc = this.configService.get<string>('NAMEPC');
 
@@ -36,6 +36,15 @@ export class RespaldoDesembolsosService {
     console.log('/1-', createRespaldoDesembolsoDto);
 
     try {
+      const destinationPath = `/home/${this.namePc}/Documentos/${createRespaldoDesembolsoDto.desembolsos_id}`;
+      if (!fs.existsSync(destinationPath)) {
+        // throw new NotFoundException(`La carpeta ${documentsPath} no existe.`);
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El documento con ID: ${createRespaldoDesembolsoDto.desembolsos_id} NO SE CARGO, No se podra cargar los Anexos`,
+          message: `El documento con ID: ${createRespaldoDesembolsoDto.desembolsos_id}`,
+        });
+      }
       const { tiporespaldo_id, ...restoDeDatos } = createRespaldoDesembolsoDto;
 
       const fechaActual = new Date();
@@ -100,6 +109,14 @@ export class RespaldoDesembolsosService {
         );
 
         const destinationPath = `/home/${this.namePc}/Documentos/${createRespaldoDesembolsoDto.desembolsos_id}/${uniqueName}`;
+        /* if (!fs.existsSync(destinationPath)) {
+          // throw new NotFoundException(`La carpeta ${documentsPath} no existe.`);
+          throw new BadRequestException({
+            statusCode: 400,
+            error: `El documento con ID: ${createRespaldoDesembolsoDto.desembolsos_id} NO SE CARGO, No se podra cargar los Anexos`,
+            message: `El documento con ID: ${createRespaldoDesembolsoDto.desembolsos_id}`,
+          });
+        } */
         // const destinationPath = `/home/${this.namePc}/Documentos/${uniqueName}`;
         try {
           fs.writeFileSync(destinationPath, file.buffer);
@@ -281,6 +298,16 @@ export class RespaldoDesembolsosService {
     archivo: string,
   ): Promise<string> {
     try {
+      const filesDirectory = `/home/${this.namePc}/Documentos/${desembolsos_id}/`;
+
+      if (!fs.existsSync(filesDirectory)) {
+        // throw new NotFoundException(`La carpeta ${documentsPath} no existe.`);
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El documento con ID: ${desembolsos_id} NO SE CARGO`,
+          message: `El documento con ID: ${desembolsos_id}`,
+        });
+      }
       const respaldosDesembolso = await this.respaldodesembolsoRepository.query(
         `SELECT rd.*
          FROM respaldo_desembolsos rd
@@ -295,7 +322,6 @@ export class RespaldoDesembolsosService {
         });
       }
       const id = respaldosDesembolso[0].id;
-      const filesDirectory = `/home/${this.namePc}/Documentos/${desembolsos_id}/`;
       const matchingFile = fs.readdirSync(filesDirectory).find((file) => {
         const fileNameWithoutExtension = path.parse(file).name;
         const filePrefix = fileNameWithoutExtension.split('-')[0];
@@ -337,6 +363,16 @@ export class RespaldoDesembolsosService {
     res: Response,
   ): Promise<void> {
     try {
+      const filesDirectory = `/home/${this.namePc}/Documentos/${desembolsos_id}/`;
+
+      if (!fs.existsSync(filesDirectory)) {
+        // throw new NotFoundException(`La carpeta ${documentsPath} no existe.`);
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El documento con ID: ${desembolsos_id} NO SE CARGO`,
+          message: `El documento con ID: ${desembolsos_id}`,
+        });
+      }
       const respaldosDesembolso = await this.respaldodesembolsoRepository.query(
         `SELECT rd.*
          FROM respaldo_desembolsos rd
@@ -352,7 +388,6 @@ export class RespaldoDesembolsosService {
 
       const nomarchivo = respaldosDesembolso[0].archivo;
 
-      const filesDirectory = `/home/${this.namePc}/Documentos/${desembolsos_id}/`;
 
       const filesInDirectory = fs.readdirSync(filesDirectory);
 

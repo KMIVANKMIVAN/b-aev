@@ -38,7 +38,7 @@ export class RecibirPdfsEnviarService {
         nombrePDF: file.originalname,
       });
     } catch (error) {
-      return res.status(500).json({ message: 'Error al Guardar el PDF' });
+      return res.status(500).json({ message: 'Conflictos al Guardar el PDF' });
     }
   }
 
@@ -123,7 +123,7 @@ export class RecibirPdfsEnviarService {
         throw new Error('No se encontraron PDFs para firmar');
       }
     } catch (error) {
-      throw new Error('Error al buscar PDFs para firmar');
+      throw new Error('Conflictos al buscar PDFs para firmar');
     }
   }
   async traerPDFFirmarBase64(nombreParcialPdf: string): Promise<{ nombrePdf: string, pdfBase64: string }> {
@@ -145,12 +145,21 @@ export class RecibirPdfsEnviarService {
         throw new Error('No se encontraron PDFs para firmar');
       }
     } catch (error) {
-      throw new Error('Error al buscar PDFs para firmar');
+      throw new Error('Conflicto al buscar PDFs para firmar');
     }
   }
   async traerPDFFirmarBase64NombreComple(nombrePdf: string): Promise<{ nombrePdf: string, pdfBase64: string }> {
     try {
       const documentsPath = `/home/${this.namePc}/Documentos/${nombrePdf}`;
+      // Verifica si la carpeta existe
+      if (!fs.existsSync(documentsPath)) {
+        // throw new NotFoundException(`La carpeta ${documentsPath} no existe.`);
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El documento con ID: ${nombrePdf} NO SE CARGO`,
+          message: `El documento con ID: ${nombrePdf}`,
+        });
+      }
 
       const pdfFullPath = path.join(documentsPath, `${nombrePdf}.pdf`);
 
@@ -160,10 +169,24 @@ export class RecibirPdfsEnviarService {
         const pdfBase64 = pdfBuffer.toString('base64'); // Convierte el buffer a base64
         return { nombrePdf, pdfBase64 }; // Retorna el nombre del archivo y el PDF en base64
       } else {
-        throw new Error('No se encontró el PDF especificado para firmar');
+        // throw new Error('No se encontró el PDF especificado para firmar');
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se encontró el PDF especificado para firmar`,
+          message: `No se encontró el PDF especificado para firmar`,
+        });
       }
     } catch (error) {
-      throw new Error('Error al buscar PDFs para firmar');
+      // throw new Error('Conflicto al buscar PDFs para firmar');
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (traerPDFFirmarBase64NombreComple): ${error}`,
+          message: `Error del Servidor en (traerPDFFirmarBase64NombreComple): ${error}`,
+        });
+      }
     }
   }
 
@@ -188,8 +211,8 @@ export class RecibirPdfsEnviarService {
 
       return pdfFileName;
     } catch (error) {
-      console.error('Error al recibir y guardar el PDF en base64:', error);
-      throw new Error('Error al recibir y guardar el PDF en base64');
+      console.error('Conflicto al recibir y guardar el PDF en base64:', error);
+      throw new Error('Conflicto al recibir y guardar el PDF en base64');
     }
   }
 
@@ -207,8 +230,8 @@ export class RecibirPdfsEnviarService {
       const nombrePDF = `${fileName}.pdf`;
       res.status(200).json({ message: 'El Archivo se guardo Exitosamente', nombrePDF });
     } catch (error) {
-      console.error('Error al convertir Base64 a PDF:', error);
-      res.status(404).send('Error durante la subida del archivo');
+      console.error('Conflicto al convertir Base64 a PDF:', error);
+      res.status(404).send('Conflicto durante la subida del archivo');
     }
   }
 
@@ -285,6 +308,45 @@ export class RecibirPdfsEnviarService {
       fs.writeFileSync(filePath, buffer);
 
       const nombrePDF = `${folderName}/${fileName}.pdf`;
+      res.status(200).json({ message: 'El Archivo se guardó Exitosamente', nombrePDF });
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (base64ToPdfCarpeta): ${error}`,
+          message: `Error del Servidor en (base64ToPdfCarpeta): ${error}`,
+        });
+      }
+    }
+  }
+
+  async sobreEscribir(
+    base64String: string,
+    carpetaName: string,
+    fileName: string,
+    res: Response,
+  ): Promise<void> {
+    try {
+      // Definir el directorio de archivos y el camino del archivo directamente dentro de carpetaName
+      const filesDirectory = `/home/${this.namePc}/Documentos/${carpetaName}/`;
+      if (!fs.existsSync(filesDirectory)) {
+        // throw new NotFoundException(`La carpeta ${documentsPath} no existe.`);
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El documento con ID: ${carpetaName} NO SE CARGO`,
+          message: `El documento con ID: ${carpetaName}`,
+        });
+      }
+      const filePath = path.join(filesDirectory, `${fileName}.pdf`);
+
+      // Convertir la cadena base64 a buffer y escribir/sobrescribir el archivo PDF
+      const buffer = Buffer.from(base64String, 'base64');
+      fs.writeFileSync(filePath, buffer);
+
+      // Devolver el nombre del PDF creado
+      const nombrePDF = `${carpetaName}/${fileName}.pdf`;
       res.status(200).json({ message: 'El Archivo se guardó Exitosamente', nombrePDF });
     } catch (error) {
       if (error instanceof BadRequestException) {

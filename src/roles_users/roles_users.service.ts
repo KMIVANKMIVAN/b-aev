@@ -27,8 +27,8 @@ export class RolesUsersService {
       if (!savedRolesUser) {
         throw new BadRequestException({
           statusCode: 400,
-          error: `Error al guardar el nuevo RolesUser.`,
-          message: `Error al guardar el nuevo RolesUser.`,
+          error: `Conflicto al guardar el nuevo RolesUser.`,
+          message: `Conflicto al guardar el nuevo RolesUser.`,
         });
       }
       return savedRolesUser;

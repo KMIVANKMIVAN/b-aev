@@ -76,7 +76,7 @@ import { EstadoModule } from './estado/estado.module';
     DerivacionModule,
     FirmadorModule,
 
-    TypeOrmModule.forRoot({
+    /* TypeOrmModule.forRoot({
       logging: true,
       entities: [
         User,
@@ -118,7 +118,7 @@ import { EstadoModule } from './estado/estado.module';
       password: '',
       database: 'cuadro',
     }),
-    CuadroModule,
+    CuadroModule, */
     /* TypeOrmModule.forRoot({
       logging: true,
       entities: [
@@ -158,8 +158,8 @@ import { EstadoModule } from './estado/estado.module';
       password: configService.get<string>('DATABASECUADROPASSWORD'), // Ejemplo de cómo acceder a otra variable
       database: configService.get<string>('DATABASECUADRO'),
     }), */
-
-    /* TypeOrmModule.forRootAsync({
+    //comnetar esto
+    TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         logging: true,
@@ -206,8 +206,9 @@ import { EstadoModule } from './estado/estado.module';
         password: configService.get<string>('DATABASECUADROPASSWORD'),
         database: configService.get<string>('DATABASECUADRO'),
       }),
-    }), */
+    }),
     CuadroModule,
+    //hasta a qui
     ProyectosModule,
     GenerarPdfsModule,
     RecibirPdfsEnviarModule,
@@ -217,4 +218,4 @@ import { EstadoModule } from './estado/estado.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

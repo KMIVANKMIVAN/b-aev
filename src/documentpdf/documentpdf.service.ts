@@ -23,7 +23,7 @@ export class DocumentpdfService {
     private connection: Connection,
 
     private configService: ConfigService,
-  ) {}
+  ) { }
 
   namePc = this.configService.get<string>('NAMEPC');
 
@@ -163,7 +163,7 @@ export class DocumentpdfService {
       );
 
       if (matchingFiles.length === 0) {
-        res.status(404).send('Error ¿Estas seguro de que se Subio el Archivo?');
+        res.status(404).send('Conflicto ¿Estas seguro de que se Subio el Archivo?');
         return;
       }
 
@@ -186,11 +186,11 @@ export class DocumentpdfService {
 
       fileStream.on('error', (error) => {
         console.error('Error durante la descarga del archivo:', error);
-        res.status(404).send('Error durante la descarga del archivo');
+        res.status(404).send('Conflicto durante la descarga del archivo');
       });
     } catch (error) {
       console.error('Error durante la descarga del archivo:', error);
-      res.status(404).send('Error durante la descarga del archivo');
+      res.status(404).send('Conflicto durante la descarga del archivo');
     }
   }
 
@@ -261,10 +261,10 @@ export class DocumentpdfService {
       });
 
       fileStream.on('error', () => {
-        res.status(404).send('Error al mostrar el archivo PDF');
+        res.status(404).send('Conflicto al mostrar el archivo PDF');
       });
     } catch (error) {
-      res.status(404).send('Error al mostrar el archivo PDF');
+      res.status(404).send('Conflicto al mostrar el archivo PDF');
     }
   }
 
@@ -300,10 +300,10 @@ export class DocumentpdfService {
       });
 
       fileStream.on('error', () => {
-        res.status(404).send('Error al mostrar el archivo PDF');
+        res.status(404).send('Conflicto al mostrar el archivo PDF');
       });
     } catch (error) {
-      res.status(404).send('Error al mostrar el archivo PDF');
+      res.status(404).send('Conflicto al mostrar el archivo PDF');
     }
   }
   async buscarpdf(partialName: string): Promise<boolean | string> {
@@ -373,8 +373,8 @@ export class DocumentpdfService {
 
       res.send('Archivo eliminado correctamente');
     } catch (error) {
-      console.error('Error al eliminar el PDF:', error);
-      res.status(404).send('Error al eliminar el archivo PDF');
+      console.error('Conflicto al eliminar el PDF:', error);
+      res.status(404).send('Conflicto al eliminar el archivo PDF');
     }
   }
 
@@ -484,12 +484,12 @@ export class DocumentpdfService {
         }
         res.status(200).send('PDF guardado exitosamente');
       } catch (error) {
-        res.status(404).send('Error durante la subida del archivo try 0');
+        res.status(404).send('Conflicto durante la subida del archivo try 0');
       }
     } catch (error) {
       console.error('Error al convertir Base64 a PDF:', error);
 
-      res.status(404).send('Error durante la subida del archivo try');
+      res.status(404).send('Conflicto durante la subida del archivo try');
     }
   }
   async enviarBanco(numero: string): Promise<string> {
@@ -538,8 +538,8 @@ export class DocumentpdfService {
       if (result.affectedRows === 0) {
         throw new BadRequestException({
           statusCode: 400,
-          error: `Error al actualizar el registro en la base de datos`,
-          message: `Error al actualizar el registro en la base de datos`,
+          error: `Conflicto al actualizar el registro en la base de datos`,
+          message: `Conflicto al actualizar el registro en la base de datos`,
         });
       }
       return mensajeExito;
@@ -578,7 +578,7 @@ export class DocumentpdfService {
       }
     } catch (error) {
       throw new Error(
-        'Error al ejecutar la consulta SQL para obtener los datos',
+        'Conflicto al ejecutar la consulta SQL para obtener los datos',
       );
     }
   }

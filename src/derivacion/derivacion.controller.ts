@@ -13,7 +13,7 @@ import { UpdateDerivacionDto } from './dto/update-derivacion.dto';
 
 @Controller('derivacion')
 export class DerivacionController {
-  constructor(private readonly derivacionService: DerivacionService) {}
+  constructor(private readonly derivacionService: DerivacionService) { }
 
   @Post()
   async create(@Body() createDerivacionDto: CreateDerivacionDto) {
@@ -64,6 +64,16 @@ export class DerivacionController {
     @Body() updateDerivacionDto: UpdateDerivacionDto,
   ) {
     return await this.derivacionService.update(+id, updateDerivacionDto);
+  }
+  @Patch('/aceptar/:userid/:proyecto/:desembolso/:estadotipo')
+  async aceptar(
+    @Param('userid') userid: number,
+    @Param('proyecto') proyecto: string,
+    @Param('desembolso') desembolso: number,
+    @Param('estadotipo') estadotipo: number,
+    @Body() updateDerivacionDto: UpdateDerivacionDto,
+  ) {
+    return await this.derivacionService.aceptar(+userid, proyecto, desembolso, estadotipo, updateDerivacionDto);
   }
 
   @Delete(':id')

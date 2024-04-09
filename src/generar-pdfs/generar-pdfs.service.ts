@@ -326,7 +326,7 @@ text-align: center;
       );
 
       if (matchingFiles.length === 0) {
-        res.status(404).send('Error ¿Estas seguro de que se Subio el Archivo?');
+        res.status(404).send('Conflicto ¿Estas seguro de que se Subio el Archivo?');
         return;
       }
 
@@ -348,12 +348,12 @@ text-align: center;
       });
 
       fileStream.on('error', (error) => {
-        console.error('Error durante la descarga del archivo:', error);
-        res.status(404).send('Error durante la descarga del archivo');
+        console.error('Conflicto durante la descarga del archivo:', error);
+        res.status(404).send('Conflicto durante la descarga del archivo');
       });
     } catch (error) {
-      console.error('Error durante la descarga del archivo:', error);
-      res.status(404).send('Error durante la descarga del archivo');
+      console.error('Conflicto durante la descarga del archivo:', error);
+      res.status(404).send('Conflicto durante la descarga del archivo');
     }
   }
 }

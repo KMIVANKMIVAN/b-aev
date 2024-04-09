@@ -18,7 +18,7 @@ export class DerivacionService {
     @InjectRepository(Derivacion)
     private readonly derivacionRepository: Repository<Derivacion>,
     private connection: Connection,
-  ) {}
+  ) { }
 
   /* async create(createDerivacionDto: CreateDerivacionDto): Promise<Derivacion> {
     try {
@@ -318,9 +318,11 @@ export class DerivacionService {
     try {
       const existingDerivacion = await this.findOne(id);
       const { ...rest } = updateDerivacionDto;
+
       const updatedDerivacion: Partial<Derivacion> = {
         ...rest,
       };
+
       const updateResult = await this.derivacionRepository.update(
         id,
         updatedDerivacion,
@@ -347,6 +349,71 @@ export class DerivacionService {
           statusCode: 500,
           error: `Error del Servidor en (update): ${error}`,
           message: `Error del Servidor en (update): ${error}`,
+        });
+      }
+    }
+  }
+
+  async aceptar(
+    userid: number,
+    proyecto: string,
+    desembolso: number,
+    estadotipo: number,
+    updateDerivacionDto: UpdateDerivacionDto,
+  ): Promise<Derivacion> {
+    console.log("estadotipo", estadotipo);
+
+    try {
+      const existingDerivacion = await this.derivacionRepository.findOne({
+        where: {
+          codigo_proyecto: proyecto,
+          id_desembolso: desembolso, // Asegúrate de que desembolso es un número.
+          id_destinatario: userid,
+          estado: 1,
+        },
+        order: {
+          fecha_envio: "DESC", // Asegúrate de que la fecha más reciente es la primera
+        },
+      });
+
+      if (!existingDerivacion) {
+        throw new BadRequestException({
+          statusCode: 404,
+          error: `No se encontró una derivación que coincida con los criterios especificados.`,
+          message: `No se encontró una derivación válida para aceptar.`,
+        });
+      }
+
+      // Actualiza el estado a 3
+      const updateResult = await this.derivacionRepository.update(existingDerivacion.id, {
+        ...updateDerivacionDto,
+        estado: estadotipo, // Actualiza el estado a 3
+      });
+
+      if (updateResult.affected === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `La derivación con ID ${existingDerivacion.id} NO se actualizó correctamente`,
+          message: `Derivación con ID ${existingDerivacion.id} no se actualizó correctamente`,
+        });
+      }
+
+      // Retorna la derivación actualizada
+      return this.findOne(existingDerivacion.id);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (aceptar) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (aceptar) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (aceptar): ${error}`,
+          message: `Error del Servidor en (aceptar): ${error}`,
         });
       }
     }
