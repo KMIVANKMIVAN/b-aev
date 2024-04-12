@@ -18,6 +18,7 @@ import { ConfigService } from '@nestjs/config';
 export class RecibirPdfsEnviarService {
   constructor(
     private configService: ConfigService,
+    private connection: Connection,
   ) { }
 
   namePc = this.configService.get<string>('NAMEPC');
@@ -235,7 +236,7 @@ export class RecibirPdfsEnviarService {
     }
   }
 
-  async base64ToPdfCarpeta(
+  /* async base64ToPdfCarpeta(
     base64String: string,
     fileName: string,
     res: Response,
@@ -259,6 +260,51 @@ export class RecibirPdfsEnviarService {
           });
         }
       }
+
+      const buffer = Buffer.from(base64String, 'base64');
+      fs.writeFileSync(filePath, buffer);
+
+      const nombrePDF = `${folderName}/${fileName}.pdf`;
+      res.status(200).json({ message: 'El Archivo se guardó Exitosamente', nombrePDF });
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (base64ToPdfCarpeta): ${error}`,
+          message: `Error del Servidor en (base64ToPdfCarpeta): ${error}`,
+        });
+      }
+    }
+  } */
+  async base64ToPdfCarpeta(
+    base64String: string,
+    fileName: string,
+    res: Response,
+  ): Promise<void> {
+    try {
+      const filesDirectory = `/home/${this.namePc}/Documentos/`;
+      const folderName = `${fileName}`;
+      const folderPath = path.join(filesDirectory, folderName);
+      const filePath = path.join(folderPath, `${fileName}.pdf`);
+
+      // Verificar si la carpeta ya existe
+      if (fs.existsSync(folderPath)) {
+        // Si la carpeta existe, borrarla y su contenido
+        const sql = `
+        DELETE FROM respaldo_desembolsos
+        WHERE desembolsos_id = ${fileName};
+      `;
+        const result = await this.connection.query(sql);
+        if (result) {
+          fs.rmSync(folderPath, { recursive: true });
+        }
+
+      }
+
+      // Crear la carpeta nuevamente
+      fs.mkdirSync(folderPath);
 
       const buffer = Buffer.from(base64String, 'base64');
       fs.writeFileSync(filePath, buffer);

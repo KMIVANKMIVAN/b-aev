@@ -364,6 +364,25 @@ export class DerivacionService {
     console.log("estadotipo", estadotipo);
 
     try {
+      const existingDerivacionAceptado = await this.derivacionRepository.findOne({
+        where: {
+          codigo_proyecto: proyecto,
+          id_desembolso: desembolso, // Asegúrate de que desembolso es un número.
+          id_destinatario: userid,
+          estado: 3,
+        },
+        order: {
+          fecha_envio: "DESC", // Asegúrate de que la fecha más reciente es la primera
+        },
+      });
+
+      if (existingDerivacionAceptado) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `El Instructivo ya fue aceptado NO Puede ser Rechazado`,
+          message: `No se encontró una derivación válida para aceptar.`,
+        });
+      }
       const existingDerivacion = await this.derivacionRepository.findOne({
         where: {
           codigo_proyecto: proyecto,
