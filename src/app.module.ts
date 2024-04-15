@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 
 import { ConfigModule } from '@nestjs/config';
 
-import { ConfigService } from '@nestjs/config';
+// import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { User } from './users/entities/user.entity';
@@ -24,7 +24,10 @@ import { Derivacion } from './derivacion/entities/derivacion.entity';
 import { Firmador } from './firmador/entities/firmador.entity';
 import { Estado } from './estado/entities/estado.entity';
 
-//////cuadro
+import { Usuariobusa } from './usuariobusa/entities/usuariobusa.entity';
+import { Sucursalbusa } from './sucursalbusa/entities/sucursalbusa.entity';
+import { Departamentobusa } from './departamentobusa/entities/departamentobusa.entity';
+import { Nivelbusa } from './nivelbusa/entities/nivelbusa.entity';
 
 // import {  } from './';
 
@@ -43,6 +46,7 @@ import { RespaldoDesembolsosModule } from './respaldo_desembolsos/respaldo_desem
 import { TipoRespaldoModule } from './tipo_respaldo/tipo_respaldo.module';
 import { DerivacionModule } from './derivacion/derivacion.module';
 import { FirmadorModule } from './firmador/firmador.module';
+
 //////cuadro
 
 import { CuadroModule } from './cuadro/cuadro.module';
@@ -51,6 +55,12 @@ import { GenerarPdfsModule } from './generar-pdfs/generar-pdfs.module';
 import { RecibirPdfsEnviarModule } from './recibir-pdfs-enviar/recibir-pdfs-enviar.module';
 import { ConsultasExternasModule } from './consultas-externas/consultas-externas.module';
 import { EstadoModule } from './estado/estado.module';
+import { UsuariobusaModule } from './usuariobusa/usuariobusa.module';
+import { DepartamentobusaModule } from './departamentobusa/departamentobusa.module';
+import { SucursalbusaModule } from './sucursalbusa/sucursalbusa.module';
+import { NivelbusaModule } from './nivelbusa/nivelbusa.module';
+import { SemillabusaModule } from './semillabusa/semillabusa.module';
+import { AuthbusaModule } from './authbusa/authbusa.module';
 
 @Module({
   imports: [
@@ -76,7 +86,7 @@ import { EstadoModule } from './estado/estado.module';
     DerivacionModule,
     FirmadorModule,
 
-    /* TypeOrmModule.forRoot({
+    TypeOrmModule.forRoot({
       logging: true,
       entities: [
         User,
@@ -94,6 +104,10 @@ import { EstadoModule } from './estado/estado.module';
         Derivacion,
         Firmador,
         Estado,
+        Usuariobusa,
+        Sucursalbusa,
+        Departamentobusa,
+        Nivelbusa,
       ],
       synchronize: false,
       multipleStatements: true,
@@ -118,7 +132,7 @@ import { EstadoModule } from './estado/estado.module';
       password: '',
       database: 'cuadro',
     }),
-    CuadroModule, */
+    CuadroModule,
     /* TypeOrmModule.forRoot({
       logging: true,
       entities: [
@@ -159,7 +173,7 @@ import { EstadoModule } from './estado/estado.module';
       database: configService.get<string>('DATABASECUADRO'),
     }), */
     //comnetar esto
-    TypeOrmModule.forRootAsync({
+    /* TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         logging: true,
@@ -207,15 +221,21 @@ import { EstadoModule } from './estado/estado.module';
         database: configService.get<string>('DATABASECUADRO'),
       }),
     }),
-    CuadroModule,
+    CuadroModule, */
     //hasta a qui
     ProyectosModule,
     GenerarPdfsModule,
     RecibirPdfsEnviarModule,
     ConsultasExternasModule,
     EstadoModule,
+    UsuariobusaModule,
+    DepartamentobusaModule,
+    SucursalbusaModule,
+    NivelbusaModule,
+    SemillabusaModule,
+    AuthbusaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
