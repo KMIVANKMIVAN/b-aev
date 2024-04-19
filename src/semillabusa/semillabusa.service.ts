@@ -148,18 +148,6 @@ export class SemillabusaService {
     const usuarios = [];
 
     for (const usuario of SEMILLA_USUARIOS) {
-      /* const nuevoUsuario = await this.usuariobusaService.create({
-        nombres: userData.nombres,
-        apellidos: userData.apellidos,
-        ci: userData.ci,
-        complemento: userData.complemento,
-        correo: userData.correo,
-        contrasenia: userData.contrasenia,
-        es_activo: userData.es_activo,
-        se_cambiado_cntr: userData.se_cambiado_cntr,
-        nivelbusa_id: userData.nivelbusa_id,
-        sucursal_id: userData.sucursal_id,
-      }); */
       const nuevoUsuario = await this.usuariobusaService.create(usuario);
       usuarios.push(nuevoUsuario);
     }

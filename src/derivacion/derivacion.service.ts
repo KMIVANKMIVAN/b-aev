@@ -438,6 +438,47 @@ export class DerivacionService {
     }
   }
 
+  async ocultarDerivar(
+    userid: number,
+    proyecto: string,
+    desembolso: number,
+  ): Promise<boolean> {
+
+    try {
+      const ocultar = await this.derivacionRepository.findOne({
+        where: {
+          codigo_proyecto: proyecto,
+          id_desembolso: desembolso, // Asegúrate de que desembolso es un número.
+          id_enviador: userid,
+          estado: 1,
+        },
+      });
+      // Si ocultar es null significa que no se encontró ninguna derivación que cumpla las condiciones
+      if (!ocultar) {
+        return false;
+      }
+
+      // Retorna true si se cumplieron todas las condiciones
+      return true;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (aceptar) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (aceptar) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (aceptar): ${error}`,
+          message: `Error del Servidor en (aceptar): ${error}`,
+        });
+      }
+    }
+  }
+
   async remove(id: number): Promise<void> {
     try {
       const existingDerivacion = await this.findOne(id);

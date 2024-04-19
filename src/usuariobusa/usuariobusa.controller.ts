@@ -26,6 +26,10 @@ export class UsuariobusaController {
   findAll() {
     return this.usuariobusaService.findAll();
   }
+  @Get('/findmenosadmin')
+  findMenosAdmin() {
+    return this.usuariobusaService.findMenosAdmin();
+  }
 
   //@UseGuards(AuthGuard)
   @Get(':id')

@@ -44,9 +44,9 @@ export class CreateUsuariobusaDto {
   @IsBoolean()
   es_activo: boolean;
 
-  @IsNumber()
+  /* @IsNumber()
   @IsNotEmpty()
-  sucursal_id: number;
+  sucursal_id: number; */
 
   @IsNumber()
   @IsNotEmpty()

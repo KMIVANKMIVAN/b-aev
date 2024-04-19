@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 
 import { ConfigModule } from '@nestjs/config';
 
-// import { ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { User } from './users/entities/user.entity';
@@ -28,6 +28,7 @@ import { Usuariobusa } from './usuariobusa/entities/usuariobusa.entity';
 import { Sucursalbusa } from './sucursalbusa/entities/sucursalbusa.entity';
 import { Departamentobusa } from './departamentobusa/entities/departamentobusa.entity';
 import { Nivelbusa } from './nivelbusa/entities/nivelbusa.entity';
+import { Firmadorusuario } from './firmadorusuario/entities/firmadorusuario.entity';
 
 // import {  } from './';
 
@@ -61,6 +62,7 @@ import { SucursalbusaModule } from './sucursalbusa/sucursalbusa.module';
 import { NivelbusaModule } from './nivelbusa/nivelbusa.module';
 import { SemillabusaModule } from './semillabusa/semillabusa.module';
 import { AuthbusaModule } from './authbusa/authbusa.module';
+import { FirmadorusuarioModule } from './firmadorusuario/firmadorusuario.module';
 
 @Module({
   imports: [
@@ -86,7 +88,7 @@ import { AuthbusaModule } from './authbusa/authbusa.module';
     DerivacionModule,
     FirmadorModule,
 
-    TypeOrmModule.forRoot({
+    /* TypeOrmModule.forRoot({
       logging: true,
       entities: [
         User,
@@ -132,7 +134,7 @@ import { AuthbusaModule } from './authbusa/authbusa.module';
       password: '',
       database: 'cuadro',
     }),
-    CuadroModule,
+    CuadroModule, */
     /* TypeOrmModule.forRoot({
       logging: true,
       entities: [
@@ -173,7 +175,7 @@ import { AuthbusaModule } from './authbusa/authbusa.module';
       database: configService.get<string>('DATABASECUADRO'),
     }), */
     //comnetar esto
-    /* TypeOrmModule.forRootAsync({
+    TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         logging: true,
@@ -193,6 +195,10 @@ import { AuthbusaModule } from './authbusa/authbusa.module';
           Derivacion,
           Firmador,
           Estado,
+          Usuariobusa,
+          Sucursalbusa, Departamentobusa,
+          Nivelbusa,
+          Firmadorusuario,
         ],
         synchronize: false,
         multipleStatements: true,
@@ -221,7 +227,7 @@ import { AuthbusaModule } from './authbusa/authbusa.module';
         database: configService.get<string>('DATABASECUADRO'),
       }),
     }),
-    CuadroModule, */
+    CuadroModule,
     //hasta a qui
     ProyectosModule,
     GenerarPdfsModule,
@@ -234,8 +240,9 @@ import { AuthbusaModule } from './authbusa/authbusa.module';
     NivelbusaModule,
     SemillabusaModule,
     AuthbusaModule,
+    FirmadorusuarioModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

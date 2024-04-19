@@ -16,7 +16,7 @@ export class FirmadorController {
   async findAll() {
     return await this.firmadorService.findAll();
   }
-  @Get('/findAllDepartamento')
+  @Get('/findalldepartamento')
   async findAllDepartamento() {
     return await this.firmadorService.findAllDepartamento();
   }

@@ -76,6 +76,15 @@ export class DerivacionController {
     return await this.derivacionService.aceptar(+userid, proyecto, desembolso, estadotipo, updateDerivacionDto);
   }
 
+  @Get('/ocultarderivar/:userid/:proyecto/:desembolso')
+  async ocultarDerivar(
+    @Param('userid') userid: number,
+    @Param('proyecto') proyecto: string,
+    @Param('desembolso') desembolso: number,
+  ) {
+    return await this.derivacionService.ocultarDerivar(+userid, proyecto, desembolso);
+  }
+
   @Delete(':id')
   async remove(@Param('id') id: number) {
     return await this.derivacionService.remove(+id);

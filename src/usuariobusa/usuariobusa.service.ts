@@ -16,7 +16,7 @@ export class UsuariobusaService {
   constructor(
     @InjectRepository(Usuariobusa)
     private readonly usuariobusaRepository: Repository<Usuariobusa>,
-  ) {}
+  ) { }
 
   async create(createUsuarioDto: CreateUsuariobusaDto): Promise<Usuariobusa> {
     try {
@@ -75,6 +75,30 @@ export class UsuariobusaService {
   async findAll(): Promise<Usuariobusa[]> {
     try {
       const users = await this.usuariobusaRepository.find();
+      if (!users || users.length === 0) {
+        throw new BadRequestException({
+          error: `No se encontraron usuarios`,
+          message: `No hay usuarios en la base de datos`,
+        });
+      }
+      // return users;
+      users.forEach((user) => delete user.contrasenia);
+      return users;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (findAll): ${error}`,
+          message: `Error del Servidor en (findAll): ${error}`,
+        });
+      }
+    }
+  }
+  async findMenosAdmin(): Promise<Usuariobusa[]> {
+    try {
+      const users = await this.usuariobusaRepository.find({ where: { nivelbusa_id: 3 } });
       if (!users || users.length === 0) {
         throw new BadRequestException({
           error: `No se encontraron usuarios`,

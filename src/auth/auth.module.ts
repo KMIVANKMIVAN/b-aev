@@ -10,6 +10,9 @@ import { UsersModule } from '../users/users.module';
 import { HttpModule } from '@nestjs/axios';
 
 import { ConsultasExternasModule } from "../consultas-externas/consultas-externas.module";
+import { FirmadorusuarioModule } from 'src/firmadorusuario/firmadorusuario.module';
+
+
 
 @Module({
   imports: [
@@ -20,7 +23,7 @@ import { ConsultasExternasModule } from "../consultas-externas/consultas-externa
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '8h' },
     }),
-    ConsultasExternasModule,
+    ConsultasExternasModule, FirmadorusuarioModule
   ],
   controllers: [AuthController],
   providers: [AuthService],

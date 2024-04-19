@@ -171,7 +171,7 @@ export const SEMILLA_USUARIOS = [
     es_activo: true,
     se_cambiado_cntr: true,
     nivelbusa_id: 1,
-    sucursal_id: 5,
+    // sucursal_id: 5,
   },
   {
     nombres: 'ADMINLPZ',
@@ -183,7 +183,7 @@ export const SEMILLA_USUARIOS = [
     es_activo: true,
     se_cambiado_cntr: false,
     nivelbusa_id: 2,
-    sucursal_id: 1,
+    // sucursal_id: 1,
   },
   {
     nombres: 'ADMINCBBA',
@@ -195,7 +195,7 @@ export const SEMILLA_USUARIOS = [
     es_activo: true,
     se_cambiado_cntr: false,
     nivelbusa_id: 2,
-    sucursal_id: 10,
+    //sucursal_id: 10,
   },
   {
     nombres: 'ADMINSCZ',
@@ -219,7 +219,7 @@ export const SEMILLA_USUARIOS = [
     es_activo: true,
     se_cambiado_cntr: false,
     nivelbusa_id: 2,
-    sucursal_id: 22,
+    // sucursal_id: 22,
   },
   {
     nombres: 'ADMINPSI',
@@ -231,7 +231,7 @@ export const SEMILLA_USUARIOS = [
     es_activo: true,
     se_cambiado_cntr: false,
     nivelbusa_id: 2,
-    sucursal_id: 23,
+    // sucursal_id: 23,
   },
   {
     nombres: 'ADMINCHQ',
@@ -243,7 +243,7 @@ export const SEMILLA_USUARIOS = [
     es_activo: true,
     se_cambiado_cntr: false,
     nivelbusa_id: 2,
-    sucursal_id: 24,
+    // sucursal_id: 24,
   },
   {
     nombres: 'ADMINTJA',
@@ -255,7 +255,7 @@ export const SEMILLA_USUARIOS = [
     es_activo: true,
     se_cambiado_cntr: false,
     nivelbusa_id: 2,
-    sucursal_id: 25,
+    // sucursal_id: 25,
   },
   {
     nombres: 'ADMINPND',
@@ -267,7 +267,7 @@ export const SEMILLA_USUARIOS = [
     es_activo: true,
     se_cambiado_cntr: false,
     nivelbusa_id: 2,
-    sucursal_id: 26,
+    // sucursal_id: 26,
   },
   {
     nombres: 'ADMINBNI',
@@ -279,6 +279,6 @@ export const SEMILLA_USUARIOS = [
     es_activo: true,
     se_cambiado_cntr: false,
     nivelbusa_id: 2,
-    sucursal_id: 27,
+    // sucursal_id: 27,
   },
 ];

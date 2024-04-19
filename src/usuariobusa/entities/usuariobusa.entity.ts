@@ -28,8 +28,8 @@ export class Usuariobusa {
   @Column({ type: 'boolean', default: false, nullable: false })
   se_cambiado_cntr: boolean;
 
-  @Column({ type: 'int', default: false, nullable: false })
-  sucursal_id: number;
+  /* @Column({ type: 'int', default: false, nullable: false })
+  sucursal_id: number; */
 
   @Column({ type: 'int', default: false, nullable: false })
   nivelbusa_id: number;

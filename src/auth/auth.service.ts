@@ -11,12 +11,18 @@ import * as crypto from 'crypto';
 
 import { ConsultasExternasService } from "../consultas-externas/consultas-externas.service";
 
+import { Repository } from 'typeorm';
+import { FirmadorusuarioService } from 'src/firmadorusuario/firmadorusuario.service';
+
+
+
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
     private consultasExternasService: ConsultasExternasService,
+    private firmadorusuarioService: FirmadorusuarioService,
   ) { }
 
   async signIn(username: string, password: string): Promise<any> {
@@ -58,14 +64,40 @@ export class AuthService {
       const payload = { sub: user.id, username: user.username };
       const accessToken = await this.jwtService.signAsync(payload);
 
-      const userResponse = {
+      /* const userResponse = {
         id: user.id,
         username: user.username,
         nivel: user.nivel,
         prioridad: user.prioridad,
         id_oficina: user.idOficina,
         // departamento: user.departamento,
+      }; */
+
+      const userResponse: {
+        id: number;
+        username: string;
+        nivel: number;
+        prioridad: number;
+        id_oficina: number;
+        firmador?: number; // Agrega firmador como una propiedad opcional
+      } = {
+        id: user.id,
+        username: user.username,
+        nivel: user.nivel,
+        prioridad: user.prioridad,
+        id_oficina: user.idOficina,
       };
+
+      const firmadorUsuario = await this.firmadorusuarioService.mostrarPorUsuarios(user.id);
+      if (firmadorUsuario) {
+        // Agregar firmador al objeto userResponse
+        userResponse.firmador = firmadorUsuario[0].firmador;
+        console.log("646464",firmadorUsuario[0].firmador);
+        
+      }
+
+      console.log("87878787",firmadorUsuario);
+      
 
       return {
         access_token: accessToken,
