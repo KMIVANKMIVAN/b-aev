@@ -217,7 +217,7 @@ export class CuadroService {
   }
   async consultaBusa(): Promise<Cuadro[]> {
     try {
-      const sql = `
+      /* const sql = `
       SELECT
             p.id AS id_proyecto,
             p.num AS codigo,
@@ -256,7 +256,95 @@ export class CuadroService {
       AND  ISNULL(d.fecha_busa) 
       AND  ISNULL(d.archivo_busa)
       limit 100
+      `; */
+      const sql = `
+      SELECT
+            p.id AS id_proyecto,
+            p.num AS codigo,
+            p.proyecto_nombre AS nombre_proyecto,
+            t.tipo AS tipo,
+            d.id AS id_desembolso,
+            d.cont_cod,
+            d.monto_fisico,
+            d.descuento_anti_reten,
+            d.multa,
+            d.monto_desembolsado,
+            d.idcuenta,
+            c.titular,
+            c.cuentatitular,
+            d.estado,
+            d.numero_inst,
+            d.numero_factura,
+            d.fecha_insert,
+            d.objeto,
+            d.fecha_banco,
+            d.archivo,
+            d.fecha_busa,
+            d.archivo_busa,
+            d.fecha_abono 
+            FROM sipago.desembolsos d,
+            cuadro.proyectosexcel p,
+            cuadro.tipo t,
+            sipago.titularcuenta c
+            WHERE d.proyecto_id = p.id
+            AND p.idTipo = t.idTipo
+            AND d.idcuenta = c.id
+            AND d.estado = 6
+            AND NOT ISNULL(d.archivo)
+            AND NOT ISNULL(d.fecha_banco)
+      AND d.proy_cod = 'AEV-BNI-0478'
+      AND  ISNULL(d.fecha_busa) 
+      AND  ISNULL(d.archivo_busa)
       `;
+      // this.fechainicio;
+      const result = await this.connection.query(sql);
+      if (result.length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: `No se encontraron datos para la fecha seleccionada 2023-12-01`,
+          message: `No se encontraron datos para la fecha seleccionada 2023-12-01`,
+        });
+      }
+      return result;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else if (error.code === 'CONNECTION_ERROR') {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (consultaBusa) NO SE CONECTO A LA BASE DE DATOS`,
+          message: `Error del Servidor en (consultaBusa) NO SE CONECTO A LA BASE DE DATOS`,
+        });
+      } else {
+        throw new InternalServerErrorException({
+          statusCode: 500,
+          error: `Error del Servidor en (consultaBusa): ${error}`,
+          message: `Error del Servidor en (consultaBusa): ${error}`,
+        });
+      }
+    }
+  }
+  async traerInstrucParaBusa(): Promise<Cuadro[]> {
+    try {
+      const sql = `
+      SELECT
+      d.id,
+      d.proy_cod,
+      d.fecha_banco,
+      d.archivo,
+      d.fecha_busa,
+      d.archivo_busa ,
+      d.cite
+      FROM desembolsos d 
+      WHERE NOT ISNULL(d.archivo) 
+      AND NOT ISNULL(d.fecha_banco) 
+      AND  ISNULL(d.fecha_busa) 
+      AND  ISNULL(d.archivo_busa)
+      AND d.fecha_insert>='2024-1-1'
+      AND d.estado = 6
+      
+      `;
+      //AND d.proy_cod = 'AEV-BNI-0478'
       // this.fechainicio;
       const result = await this.connection.query(sql);
       if (result.length === 0) {

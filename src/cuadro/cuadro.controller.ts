@@ -22,6 +22,11 @@ export class CuadroController {
     return this.cuadroService.consultaBusa();
   }
   @UseGuards(AuthGuard)
+  @Get('trinsbu')
+  traerInstrucParaBusa() {
+    return this.cuadroService.traerInstrucParaBusa();
+  }
+  @UseGuards(AuthGuard)
   @Get('consultabusaaev/:fechaInicioC/:fechaFinC')
   consultaBusaAev(
     @Param('fechaInicioC') fechaInicioC: string,
